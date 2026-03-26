@@ -83,12 +83,19 @@ type
     BStart: TButton;
     BExecute: TButton;
     BInitiatilize: TButton;
+    btnAddAprov: TButton;
+    btnAddProd: TButton;
+    btnAddExp: TButton;
     btnInicializarArmazem: TButton;
-    btnAdicionar: TButton;
     btnExecutar: TButton;
     btnLimpar: TButton;
-    cbTipoTarefa: TComboBox;
-    cbTipoPeca: TComboBox;
+    btnExtrairRelatorio: TButton;
+    cbCorProd: TComboBox;
+    cbCorExp: TComboBox;
+    cbProduto: TComboBox;
+    cbCorAprov: TComboBox;
+    cbProdProd: TComboBox;
+    cbProdExp: TComboBox;
     GroupBox2: TGroupBox;
     GroupBox3: TGroupBox;
     GroupBox4: TGroupBox;
@@ -101,6 +108,12 @@ type
     Label13: TLabel;
     Label14: TLabel;
     Label15: TLabel;
+    Label16: TLabel;
+    Label17: TLabel;
+    Label18: TLabel;
+    Label19: TLabel;
+    Label20: TLabel;
+    Label21: TLabel;
     labelRelogio: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -116,18 +129,21 @@ type
     PageControl1: TPageControl;
     Header: TPanel;
     Footer: TPanel;
+    PageControlTarefas: TPageControl;
     panelProducao: TPanel;
     panelArmazem: TPanel;
     Panel2: TPanel;
     btnPLC: TSpeedButton;
     shpStatusPLC: TShape;
     spnMatAzul: TSpinEdit;
-    spnQtdPlano: TSpinEdit;
     spnMatVerde: TSpinEdit;
     spnMatCinza: TSpinEdit;
     spnBaseAzul: TSpinEdit;
     spnBaseVerde: TSpinEdit;
     spnBaseCinza: TSpinEdit;
+    spnQtdAprov: TSpinEdit;
+    spnQtdProd: TSpinEdit;
+    spnQtdExp: TSpinEdit;
     spnTampaAzul: TSpinEdit;
     spnTampaVerde: TSpinEdit;
     spnTampaCinza: TSpinEdit;
@@ -137,12 +153,18 @@ type
     TabSheet3: TTabSheet;
     TabSheet4: TTabSheet;
     TabSheet5: TTabSheet;
+    TabSheet6: TTabSheet;
+    TabSheet7: TTabSheet;
+    Expedicao: TTabSheet;
     Timer1: TTimer;
     procedure BExecuteClick(Sender: TObject);
     procedure BInitiatilizeClick(Sender: TObject);
     procedure BStartClick(Sender: TObject);
-    procedure btnAdicionarClick(Sender: TObject);
+    procedure btnAddAprovClick(Sender: TObject);
+    procedure btnAddExpClick(Sender: TObject);
+    procedure btnAddProdClick(Sender: TObject);
     procedure btnExecutarClick(Sender: TObject);
+    procedure btnExtrairRelatorioClick(Sender: TObject);
     procedure btnInicializarArmazemClick(Sender: TObject);
     procedure btnLimparClick(Sender: TObject);
     procedure btnPLCClick(Sender: TObject);
@@ -405,21 +427,35 @@ end;
 
 //Botão Adicionar
 
-procedure TFormDispatcher.btnAdicionarClick(Sender: TObject);
+{Botão antigo
+procedure TFormDispatcher.btnAddAprovClick(Sender: TObject);
 var
-  tarefa, peca: string;
+  tarefa, peca, produto, cor: string;
   qtd: integer;
 begin
-  // 1. Verificar se o utilizador selecionou alguma coisa nas caixas
-  if (cbTipoTarefa.ItemIndex = -1) or (cbTipoPeca.ItemIndex = -1) then
+  // 1. Descobrir o Tipo de Tarefa lendo o título do separador (Tab) que está aberto
+  if PageControlTarefas.ActivePage <> nil then
+    tarefa := PageControlTarefas.ActivePage.Caption
+  else
   begin
-    ShowMessage('Por favor, selecione o Tipo de Tarefa e o Tipo de Peça!');
+    ShowMessage('Erro: Nenhum separador selecionado.');
     Exit;
   end;
 
-  tarefa := cbTipoTarefa.Text;
-  peca   := cbTipoPeca.Text;
-  qtd    := spnQtdPlano.Value;
+  // 2. Verificar se o utilizador selecionou o Produto e a Cor
+  if (cbProduto.ItemIndex = -1) or (cbCorAprov.ItemIndex = -1) then
+  begin
+    ShowMessage('Por favor, selecione o Produto e a Cor!');
+    Exit;
+  end;
+
+  produto := cbProduto.Text;
+  cor := cbCorAprov.Text;
+
+  // O TRUQUE MÁGICO: Juntamos as duas palavras para o botão Executar não se queixar!
+  peca := produto + ' ' + cor; // Ex: "Matéria" + " " + "Azul" = "Matéria Azul"
+
+  qtd := spnQtdAprov.Value;
 
   if qtd <= 0 then
   begin
@@ -427,35 +463,105 @@ begin
     Exit;
   end;
 
-  // 2. VALIDAÇÕES E NUANCES DE LÓGICA INDUSTRIAL
-
-  // A. Aprovisionamento (Inbound): O exterior só fornece Matérias-Primas
-  if (tarefa = 'Aprovisionamento') and (Pos('Matéria', peca) = 0) then
+  // 3. AS MESMAS VALIDAÇÕES INDUSTRIAIS DE SEGURANÇA
+  if (tarefa = 'Aprovisionamento') and (produto <> 'Matéria') then
   begin
-     ShowMessage('Erro: O Aprovisionamento (Inbound) só recebe Matérias-Primas. Bases e Tampas têm de ser produzidas internamente!');
+     ShowMessage('Erro: O Aprovisionamento só recebe Matérias-Primas!');
      Exit;
   end;
 
-  // B. Produção: Matérias-Primas não se produzem
-  if (tarefa = 'Produção') and (Pos('Matéria', peca) > 0) then
+  if (tarefa = 'Produção') and (produto = 'Matéria') then
   begin
-     ShowMessage('Erro: As Matérias-Primas não podem ser produzidas, têm de ser encomendadas (Aprovisionamento)!');
+     ShowMessage('Erro: As Matérias-Primas não podem ser produzidas!');
      Exit;
   end;
 
-  // C. Expedição: Não devemos despachar Matérias-Primas para o cliente
-  if (tarefa = 'Expedição') and (Pos('Matéria', peca) > 0) then
+  if (tarefa = 'Expedição') and (produto = 'Matéria') then
   begin
-     ShowMessage('Erro: Só pode expedir produtos finais (Bases ou Tampas). O cliente não quer matéria-prima!');
+     ShowMessage('Erro: Só pode expedir produtos finais (Bases ou Tampas).');
      Exit;
   end;
 
-  // 3. Tudo válido! Adicionar à ListBox (separado por | para depois ser fácil de ler no botão Executar)
+  // 4. Tudo válido! Adicionar à ListBox com a exata mesma formatação de antes
   lstPlano.Items.Add(tarefa + ' | ' + peca + ' | ' + IntToStr(qtd));
 
-  // Opcional: Dar um aviso no Log do sistema
   LogMsg('SISTEMA: Adicionado ao plano -> ' + tarefa + ' de ' + IntToStr(qtd) + 'x ' + peca);
+end; }
+
+//Botão Adicionar Inbound
+procedure TFormDispatcher.btnAddAprovClick(Sender: TObject);
+begin
+  // 1. Verifica se o utilizador escolheu a cor da matéria-prima
+  if cbCorAprov.ItemIndex = -1 then
+  begin
+    ShowMessage('Por favor, selecione a Cor da Matéria-Prima!');
+    Exit;
+  end;
+
+  // 2. Verifica se a quantidade faz sentido
+  if spnQtdAprov.Value <= 0 then
+  begin
+    ShowMessage('A quantidade tem de ser pelo menos 1!');
+    Exit;
+  end;
+
+  // 3. O Truque: O código força a palavra "Matéria" automaticamente!
+  lstPlano.Items.Add('Aprovisionamento | Matéria ' + cbCorAprov.Text + ' | ' + IntToStr(spnQtdAprov.Value));
+
+  // 4. Regista a ação no nosso Logger
+  LogMsg('SISTEMA: Adicionado plano -> Aprovisionamento de ' + IntToStr(spnQtdAprov.Value) + 'x Matéria ' + cbCorAprov.Text);
 end;
+
+//Botão Adicionar Expedição
+procedure TFormDispatcher.btnAddExpClick(Sender: TObject);
+begin
+  // 1. Verifica se o utilizador escolheu o produto e a cor
+  if (cbProdExp.ItemIndex = -1) or (cbCorExp.ItemIndex = -1) then
+  begin
+    ShowMessage('Por favor, selecione o Produto e a Cor a expedir!');
+    Exit;
+  end;
+
+  // 2. Verifica se a quantidade é válida
+  if spnQtdExp.Value <= 0 then
+  begin
+    ShowMessage('A quantidade tem de ser pelo menos 1!');
+    Exit;
+  end;
+
+  // 3. Junta tudo e envia para a ListBox no formato padrão
+  lstPlano.Items.Add('Expedição | ' + cbProdExp.Text + ' ' + cbCorExp.Text + ' | ' + IntToStr(spnQtdExp.Value));
+
+  // 4. Regista a ação no nosso Logger
+  LogMsg('SISTEMA: Adicionado plano -> Expedição de ' + IntToStr(spnQtdExp.Value) + 'x ' + cbProdExp.Text + ' ' + cbCorExp.Text);
+end;
+
+//Botão Adicionar Produção
+procedure TFormDispatcher.btnAddProdClick(Sender: TObject);
+begin
+  // 1. Verifica se o utilizador escolheu o produto e a cor
+  if (cbProdProd.ItemIndex = -1) or (cbCorProd.ItemIndex = -1) then
+  begin
+    ShowMessage('Por favor, selecione o Produto e a Cor a produzir!');
+    Exit;
+  end;
+
+  // 2. Verifica se a quantidade faz sentido
+  if spnQtdProd.Value <= 0 then
+  begin
+    ShowMessage('A quantidade tem de ser pelo menos 1!');
+    Exit;
+  end;
+
+  // 3. Junta tudo e envia para a ListBox no formato padrão
+  lstPlano.Items.Add('Produção | ' + cbProdProd.Text + ' ' + cbCorProd.Text + ' | ' + IntToStr(spnQtdProd.Value));
+
+  // 4. Regista a ação no nosso Logger
+  LogMsg('SISTEMA: Adicionado plano -> Produção de ' + IntToStr(spnQtdProd.Value) + 'x ' + cbProdProd.Text + ' ' + cbCorProd.Text);
+end;
+
+
+
 
 //Botão Executar
 
@@ -534,6 +640,34 @@ begin
   Timer1.Enabled := true;
 
   LogMsg('SISTEMA: Execução do plano iniciada!');
+end;
+
+procedure TFormDispatcher.btnExtrairRelatorioClick(Sender: TObject);
+var
+  NomeFicheiro: string;
+begin
+  // 1. Verificar se há realmente algo para guardar
+  if memLogger.Lines.Count = 0 then
+  begin
+    ShowMessage('Aviso: O Logger está vazio. Não há nada para extrair!');
+    Exit;
+  end;
+
+  // 2. Criar um nome de ficheiro único com a data e hora atual
+  // Exemplo de como vai ficar: "Relatorio_HS_Systems_20260326_184530.txt"
+  NomeFicheiro := 'Relatorio_HS_Systems_' + FormatDateTime('yyyymmdd_hhnnss', Now) + '.txt';
+
+  try
+    // 3. A magia do Lazarus: Guardar tudo num ficheiro com 1 linha de código!
+    memLogger.Lines.SaveToFile(NomeFicheiro);
+
+    // 4. Avisar o utilizador (no próprio log e com um pop-up)
+    LogMsg('SISTEMA: Relatório extraído com sucesso para o ficheiro -> ' + NomeFicheiro);
+    ShowMessage('Sucesso! Relatório guardado na pasta do teu projeto como: ' + sLineBreak + NomeFicheiro);
+  except
+    // Caso o Windows bloqueie a gravação por falta de permissões
+    ShowMessage('Erro: Não foi possível guardar o ficheiro. Verifique as permissões da pasta.');
+  end;
 end;
 
 
@@ -658,12 +792,14 @@ begin
     if (result = 1) then // Se a ligação for bem sucedida (valor > 0)
     begin
       btnPLC.Caption := 'DESCONECTAR';
-      shpStatusPLC.Brush.Color := clLime; // Muda para Verde (Ligado)
+      shpStatusPLC.Brush.Color := clRed; // Muda para Vermelho (Ligado)
       LogMsg('SISTEMA: Conectado ao PLC com sucesso.');
 
       //Desbloqueia Botões
       btnInicializarArmazem.Enabled := True;
-      btnAdicionar.Enabled := True;
+      btnAddAprov.Enabled := True;
+      btnAddProd.Enabled := True;
+      btnAddExp.Enabled := True;
       btnLimpar.Enabled := True;
       btnExecutar.Enabled := True;
 
@@ -679,12 +815,14 @@ begin
     result := M_Disconnect(); // Encerra a conexão com o autómato
 
     btnPLC.Caption := 'CONECTAR PLC';
-    shpStatusPLC.Brush.Color := clRed; // Muda para Vermelho (Desligado)
+    shpStatusPLC.Brush.Color := clLime; // Muda para Verde (Desligado)
     LogMsg('SISTEMA: Desconectado do PLC.');
 
     //Bloqueia Botoes
     btnInicializarArmazem.Enabled := False;
-    btnAdicionar.Enabled := False;
+    btnAddAprov.Enabled := False;
+    btnAddProd.Enabled := False;
+    btnAddExp.Enabled := False;
     btnLimpar.Enabled := False;
     btnExecutar.Enabled := False;
 

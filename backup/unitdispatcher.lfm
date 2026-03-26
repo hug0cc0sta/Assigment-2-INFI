@@ -1,7 +1,7 @@
 object FormDispatcher: TFormDispatcher
-  Left = 354
+  Left = 176
   Height = 654
-  Top = 319
+  Top = 284
   Width = 1318
   Caption = 'Dispatcher'
   ClientHeight = 654
@@ -26,9 +26,9 @@ object FormDispatcher: TFormDispatcher
       ClientHeight = 518
       ClientWidth = 1310
       object BExecute: TButton
-        Left = 1005
+        Left = 1032
         Height = 25
-        Top = 486
+        Top = 40
         Width = 115
         Caption = 'Execute Cycle'
         ParentFont = False
@@ -37,9 +37,9 @@ object FormDispatcher: TFormDispatcher
         OnClick = BExecuteClick
       end
       object BInitiatilize: TButton
-        Left = 1146
+        Left = 1176
         Height = 26
-        Top = 493
+        Top = 39
         Width = 58
         Caption = 'Initialize'
         ParentFont = False
@@ -218,79 +218,6 @@ object FormDispatcher: TFormDispatcher
         ParentBackground = False
         TabOrder = 3
         OnClick = GroupBox3Click
-        object cbTipoTarefa: TComboBox
-          Left = 154
-          Height = 23
-          Top = 22
-          Width = 90
-          ItemHeight = 15
-          Items.Strings = (
-            'Aprovisionamento'
-            'Produção'
-            'Expedição'
-          )
-          Style = csDropDownList
-          TabOrder = 0
-        end
-        object cbTipoPeca: TComboBox
-          Left = 154
-          Height = 23
-          Top = 58
-          Width = 89
-          ItemHeight = 15
-          Items.Strings = (
-            'Matéria Azul'
-            'Matéria Verde'
-            'Matéria Cinza'
-            'Base Azul'
-            'Base Verde'
-            'Base Cinza'
-            'Tampa Azul'
-            'Tampa Verde'
-            'Tampa Cinza'
-          )
-          Style = csDropDownList
-          TabOrder = 1
-        end
-        object spnQtdPlano: TSpinEdit
-          Left = 154
-          Height = 23
-          Top = 90
-          Width = 62
-          MaxValue = 20
-          TabOrder = 2
-        end
-        object btnAdicionar: TButton
-          Left = 38
-          Height = 44
-          Top = 128
-          Width = 170
-          Caption = 'Adicionar'
-          Enabled = False
-          TabOrder = 3
-          OnClick = btnAdicionarClick
-        end
-        object Label10: TLabel
-          Left = 26
-          Height = 15
-          Top = 22
-          Width = 75
-          Caption = 'Tipo de Tarefa'
-        end
-        object Label11: TLabel
-          Left = 26
-          Height = 15
-          Top = 58
-          Width = 70
-          Caption = 'Tipo de Parte'
-        end
-        object Label12: TLabel
-          Left = 26
-          Height = 15
-          Top = 90
-          Width = 62
-          Caption = 'Quantidade'
-        end
         object btnExecutar: TButton
           Left = 416
           Height = 42
@@ -298,7 +225,7 @@ object FormDispatcher: TFormDispatcher
           Width = 122
           Caption = 'Executar'
           Enabled = False
-          TabOrder = 4
+          TabOrder = 0
           OnClick = btnExecutarClick
         end
         object GroupBox5: TGroupBox
@@ -310,7 +237,7 @@ object FormDispatcher: TFormDispatcher
           ClientHeight = 146
           ClientWidth = 514
           ParentColor = False
-          TabOrder = 5
+          TabOrder = 1
           object Memo3: TMemo
             Left = 19
             Height = 124
@@ -329,7 +256,7 @@ object FormDispatcher: TFormDispatcher
           Width = 122
           Caption = 'Limpar'
           Enabled = False
-          TabOrder = 6
+          TabOrder = 2
           OnClick = btnLimparClick
         end
         object lstPlano: TListBox
@@ -338,7 +265,7 @@ object FormDispatcher: TFormDispatcher
           Top = 7
           Width = 269
           ItemHeight = 0
-          TabOrder = 7
+          TabOrder = 3
         end
       end
       object GroupBox4: TGroupBox
@@ -363,7 +290,7 @@ object FormDispatcher: TFormDispatcher
           Font.Pitch = fpFixed
           Font.Quality = fqDraft
           Lines.Strings = (
-            'Memo1'
+            ''
           )
           ParentFont = False
           TabOrder = 0
@@ -390,15 +317,24 @@ object FormDispatcher: TFormDispatcher
         end
       end
       object BStart: TButton
-        Left = 902
+        Left = 1227
         Height = 26
-        Top = 486
+        Top = 8
         Width = 83
         Caption = 'Start'
         ParentFont = False
         TabOrder = 6
         Visible = False
         OnClick = BStartClick
+      end
+      object btnExtrairRelatorio: TButton
+        Left = 909
+        Height = 30
+        Top = 475
+        Width = 365
+        Caption = 'Extrair Relatório'
+        TabOrder = 7
+        OnClick = btnExtrairRelatorioClick
       end
     end
     object TabSheet2: TTabSheet
@@ -602,6 +538,225 @@ object FormDispatcher: TFormDispatcher
     ParentColor = False
     ParentFont = False
     TabOrder = 2
+  end
+  object PageControlTarefas: TPageControl
+    Left = 328
+    Height = 248
+    Top = 184
+    Width = 248
+    ActivePage = TabSheet7
+    TabIndex = 1
+    TabOrder = 3
+    object TabSheet6: TTabSheet
+      Caption = 'Aprovisionamento'
+      ClientHeight = 220
+      ClientWidth = 240
+      object cbProduto: TComboBox
+        Left = 80
+        Height = 23
+        Top = 24
+        Width = 144
+        Enabled = False
+        ItemHeight = 15
+        Items.Strings = (
+          'Matéria'
+          'Base'
+          'Tampa'
+        )
+        TabOrder = 0
+        Text = 'Matéria-Prima'
+      end
+      object cbCorAprov: TComboBox
+        Left = 80
+        Height = 23
+        Top = 72
+        Width = 144
+        ItemHeight = 15
+        Items.Strings = (
+          'Azul'
+          'Verde'
+          'Cinza'
+        )
+        TabOrder = 1
+      end
+      object Label10: TLabel
+        Left = 16
+        Height = 15
+        Top = 24
+        Width = 46
+        Caption = 'Produto:'
+      end
+      object Label11: TLabel
+        Left = 16
+        Height = 15
+        Top = 72
+        Width = 22
+        Caption = 'Cor:'
+      end
+      object spnQtdAprov: TSpinEdit
+        Left = 162
+        Height = 23
+        Top = 120
+        Width = 62
+        MaxValue = 20
+        TabOrder = 2
+      end
+      object Label12: TLabel
+        Left = 16
+        Height = 15
+        Top = 120
+        Width = 62
+        Caption = 'Quantidade'
+      end
+      object btnAddAprov: TButton
+        Left = 32
+        Height = 44
+        Top = 168
+        Width = 170
+        Caption = '+ Adicionar'
+        Enabled = False
+        TabOrder = 3
+        OnClick = btnAddAprovClick
+      end
+    end
+    object TabSheet7: TTabSheet
+      Caption = 'Produção'
+      ClientHeight = 220
+      ClientWidth = 240
+      object cbProdProd: TComboBox
+        Left = 80
+        Height = 23
+        Top = 24
+        Width = 144
+        ItemHeight = 15
+        Items.Strings = (
+          'Base'
+          'Tampa'
+        )
+        TabOrder = 0
+      end
+      object cbCorProd: TComboBox
+        Left = 80
+        Height = 23
+        Top = 72
+        Width = 144
+        ItemHeight = 15
+        Items.Strings = (
+          'Azul'
+          'Verde'
+          'Cinza'
+        )
+        TabOrder = 1
+      end
+      object spnQtdProd: TSpinEdit
+        Left = 162
+        Height = 23
+        Top = 120
+        Width = 62
+        MaxValue = 20
+        TabOrder = 2
+      end
+      object btnAddProd: TButton
+        Left = 32
+        Height = 44
+        Top = 168
+        Width = 170
+        Caption = '+ Adicionar'
+        Enabled = False
+        TabOrder = 3
+        OnClick = btnAddProdClick
+      end
+      object Label16: TLabel
+        Left = 16
+        Height = 15
+        Top = 120
+        Width = 62
+        Caption = 'Quantidade'
+      end
+      object Label17: TLabel
+        Left = 16
+        Height = 15
+        Top = 72
+        Width = 22
+        Caption = 'Cor:'
+      end
+      object Label18: TLabel
+        Left = 16
+        Height = 15
+        Top = 24
+        Width = 46
+        Caption = 'Produto:'
+      end
+    end
+    object Expedicao: TTabSheet
+      Caption = 'Expedição'
+      ClientHeight = 220
+      ClientWidth = 240
+      object Label19: TLabel
+        Left = 16
+        Height = 15
+        Top = 24
+        Width = 46
+        Caption = 'Produto:'
+      end
+      object cbProdExp: TComboBox
+        Left = 80
+        Height = 23
+        Top = 24
+        Width = 144
+        ItemHeight = 15
+        Items.Strings = (
+          'Base'
+          'Tampa'
+        )
+        TabOrder = 0
+      end
+      object Label20: TLabel
+        Left = 16
+        Height = 15
+        Top = 72
+        Width = 22
+        Caption = 'Cor:'
+      end
+      object cbCorExp: TComboBox
+        Left = 80
+        Height = 23
+        Top = 72
+        Width = 144
+        ItemHeight = 15
+        Items.Strings = (
+          'Azul'
+          'Verde'
+          'Cinza'
+        )
+        TabOrder = 1
+      end
+      object Label21: TLabel
+        Left = 16
+        Height = 15
+        Top = 120
+        Width = 62
+        Caption = 'Quantidade'
+      end
+      object spnQtdExp: TSpinEdit
+        Left = 162
+        Height = 23
+        Top = 120
+        Width = 62
+        MaxValue = 20
+        TabOrder = 2
+      end
+      object btnAddExp: TButton
+        Left = 32
+        Height = 44
+        Top = 168
+        Width = 170
+        Caption = '+ Adicionar'
+        Enabled = False
+        TabOrder = 3
+        OnClick = btnAddExpClick
+      end
+    end
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer
