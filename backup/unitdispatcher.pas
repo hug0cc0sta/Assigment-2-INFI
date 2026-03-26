@@ -84,11 +84,11 @@ type
     BExecute: TButton;
     BInitiatilize: TButton;
     Button1: TButton;
-    Button2: TButton;
+    btnAdicionar: TButton;
     Button3: TButton;
-    Button4: TButton;
-    ComboBox1: TComboBox;
-    ComboBox2: TComboBox;
+    btnLimpar: TButton;
+    cbTipoTarefa: TComboBox;
+    cbTipoPeca: TComboBox;
     GroupBox2: TGroupBox;
     GroupBox3: TGroupBox;
     GroupBox4: TGroupBox;
@@ -110,7 +110,7 @@ type
     Label7: TLabel;
     Label8: TLabel;
     Label9: TLabel;
-    ListBox1: TListBox;
+    lstPlano: TListBox;
     Memo1: TMemo;
     Memo3: TMemo;
     PageControl1: TPageControl;
@@ -121,16 +121,16 @@ type
     Panel2: TPanel;
     btnPLC: TSpeedButton;
     shpStatusPLC: TShape;
-    SpinEdit1: TSpinEdit;
-    SpinEdit10: TSpinEdit;
-    SpinEdit2: TSpinEdit;
-    SpinEdit3: TSpinEdit;
-    SpinEdit4: TSpinEdit;
-    SpinEdit5: TSpinEdit;
-    SpinEdit6: TSpinEdit;
-    SpinEdit7: TSpinEdit;
-    SpinEdit8: TSpinEdit;
-    SpinEdit9: TSpinEdit;
+    spnMatAzul: TSpinEdit;
+    spnQtdPlano: TSpinEdit;
+    spnMatVerde: TSpinEdit;
+    spnMatCinza: TSpinEdit;
+    spnBaseAzul: TSpinEdit;
+    spnBaseVerde: TSpinEdit;
+    spnBaseCinza: TSpinEdit;
+    spnTampaAzul: TSpinEdit;
+    spnTampaVerde: TSpinEdit;
+    spnTampaCinza: TSpinEdit;
     StringGrid1: TStringGrid;
     TabSheet1: TTabSheet;
     TabSheet2: TTabSheet;
@@ -141,6 +141,9 @@ type
     procedure BExecuteClick(Sender: TObject);
     procedure BInitiatilizeClick(Sender: TObject);
     procedure BStartClick(Sender: TObject);
+    procedure btnAdicionarClick(Sender: TObject);
+    procedure btnInicializarArmazemClick(Sender: TObject);
+    procedure btnLimparClick(Sender: TObject);
     procedure btnPLCClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure GroupBox1Click(Sender: TObject);
@@ -397,19 +400,194 @@ begin
    end;
 end;
 
+//Botão Adicionar
+
+procedure TFormDispatcher.btnAdicionarClick(Sender: TObject);
+var
+  tarefa, peca: string;
+  qtd: integer;
+begin
+  // 1. Verificar se o utilizador selecionou alguma coisa nas caixas
+  if (cbTipoTarefa.ItemIndex = -1) or (cbTipoPeca.ItemIndex = -1) then
+  begin
+    ShowMessage('Por favor, selecione o Tipo de Tarefa e o Tipo de Peça!');
+    Exit;
+  end;
+
+  tarefa := cbTipoTarefa.Text;
+  peca   := cbTipoPeca.Text;
+  qtd    := spnQtdPlano.Value;
+
+  if qtd <= 0 then
+  begin
+    ShowMessage('A quantidade a adicionar tem de ser pelo menos 1!');
+    Exit;
+  end;
+
+  // 2. VALIDAÇÕES E NUANCES DE LÓGICA INDUSTRIAL
+
+  // A. Aprovisionamento (Inbound): O exterior só fornece Matérias-Primas
+  if (tarefa = 'Aprovisionamento') and (Pos('Matéria', peca) = 0) then
+  begin
+     ShowMessage('Erro: O Aprovisionamento (Inbound) só recebe Matérias-Primas. Bases e Tampas têm de ser produzidas internamente!');
+     Exit;
+  end;
+
+  // B. Produção: Matérias-Primas não se produzem
+  if (tarefa = 'Produção') and (Pos('Matéria', peca) > 0) then
+  begin
+     ShowMessage('Erro: As Matérias-Primas não podem ser produzidas, têm de ser encomendadas (Aprovisionamento)!');
+     Exit;
+  end;
+
+  // C. Expedição: Não devemos despachar Matérias-Primas para o cliente
+  if (tarefa = 'Expedição') and (Pos('Matéria', peca) > 0) then
+  begin
+     ShowMessage('Erro: Só pode expedir produtos finais (Bases ou Tampas). O cliente não quer matéria-prima!');
+     Exit;
+  end;
+
+  // 3. Tudo válido! Adicionar à ListBox (separado por | para depois ser fácil de ler no botão Executar)
+  lstPlano.Items.Add(tarefa + ' | ' + peca + ' | ' + IntToStr(qtd));
+
+  // Opcional: Dar um aviso no Log do sistema
+  Memo1.Append('SISTEMA: Adicionado ao plano -> ' + tarefa + ' de ' + IntToStr(qtd) + 'x ' + peca);
+end;
+
+
+//BOTÃO INICIALIZAR ARMAZEM
+procedure TFormDispatcher.btnInicializarArmazemClick(Sender: TObject);
+var
+  TotalPecas, posIndex, cel, i, r: integer;
+  InitPositions: array[1..6] of integer;
+
+  // Vamos criar um procedimento local dentro deste botão para facilitar a inserção
+  procedure InserirPeca(CodigoPeca, Quantidade: integer);
+  var
+    j: integer;
+  begin
+    for j := 1 to Quantidade do
+    begin
+      // Envia o comando para a posição válida atual
+      r := M_Initialize(InitPositions[posIndex], CodigoPeca);
+
+      // Regista na nossa matriz mental
+      WAREHOUSE_Parts[InitPositions[posIndex]] := CodigoPeca;
+
+      Inc(posIndex); // Avança para a próxima posição livre na 1ª coluna
+      Sleep(1500);   // Dá tempo ao Factory I/O para processar
+    end;
+  end;
+
+begin
+  // 1. Definir as posições obrigatórias da 1ª coluna
+  InitPositions[1] := 1;
+  InitPositions[2] := 10;
+  InitPositions[3] := 19;
+  InitPositions[4] := 28;
+  InitPositions[5] := 37;
+  InitPositions[6] := 46;
+
+  // 2. Calcular o total de peças pedidas na Interface
+  TotalPecas := spnMatAzul.Value + spnMatVerde.Value + spnMatCinza.Value +
+                spnBaseAzul.Value + spnBaseVerde.Value + spnBaseCinza.Value +
+                spnTampaAzul.Value + spnTampaVerde.Value + spnTampaCinza.Value;
+
+  // 3. Verificação de Segurança
+  if TotalPecas > 6 then
+  begin
+    ShowMessage('Erro: Só pode inicializar um máximo de 6 peças (limite da 1ª coluna do armazém). Reduza os valores!');
+    Exit; // Cancela a execução imediatamente
+  end;
+
+  if TotalPecas = 0 then
+  begin
+    ShowMessage('Aviso: Nenhuma peça selecionada para inicializar.');
+    Exit;
+  end;
+
+  // 4. Preparar o Armazém (Limpar matriz anterior)
+  SetLength(WAREHOUSE_Parts, 55);
+  for cel := 1 to Length(WAREHOUSE_Parts)-1 do
+  begin
+      WAREHOUSE_Parts[cel] := 0;
+  end;
+
+  Memo1.Append('SISTEMA: A inicializar ' + IntToStr(TotalPecas) + ' peça(s) no armazém...');
+
+  posIndex := 1; // Aponta para o primeiro espaço válido (InitPositions[1] que é a célula 1)
+
+  // 5. Inserir as peças de acordo com os valores da Interface
+  // A função InserirPeca vai usar os códigos corretos das peças
+  InserirPeca(Part_Raw_Blue, spnMatAzul.Value);     // Código 1
+  InserirPeca(Part_Raw_Green, spnMatVerde.Value);   // Código 2
+  InserirPeca(Part_Raw_Grey, spnMatCinza.Value);    // Código 3
+  InserirPeca(Part_Base_Blue, spnBaseAzul.Value);   // Código 4
+  InserirPeca(Part_Base_Green, spnBaseVerde.Value); // Código 5
+  InserirPeca(Part_Base_Grey, spnBaseCinza.Value);  // Código 6
+  InserirPeca(Part_Lid_Blue, spnTampaAzul.Value);   // Código 7
+  InserirPeca(Part_Lid_Green, spnTampaVerde.Value); // Código 8
+  InserirPeca(Part_Lid_Grey, spnTampaCinza.Value);  // Código 9
+
+  Memo1.Append('SISTEMA: Inicialização do armazém concluída!');
+end;
+
+//Botão Limpar
+
+procedure TFormDispatcher.btnLimparClick(Sender: TObject);
+var
+  IndexSelecionado: integer;
+begin
+  // 1. Descobrir qual é a linha que o utilizador selecionou na ListBox
+  IndexSelecionado := lstPlano.ItemIndex;
+
+  // 2. Verificar se há realmente algo selecionado (-1 significa que não há nada clicado)
+  if IndexSelecionado = -1 then
+  begin
+    // Nuance: Se a lista estiver totalmente vazia, damos um aviso diferente
+    if lstPlano.Items.Count = 0 then
+      ShowMessage('O plano já está vazio. Não há registos para limpar!')
+    else
+      ShowMessage('Atenção: Por favor, clique no registo que deseja apagar antes de carregar em Limpar.');
+
+    Exit; // Sai do procedimento para não tentar apagar o vazio (o que daria erro fatal no programa)
+  end;
+
+  // 3. Nuance: Registar no log da fábrica o que estamos a remover antes de o apagar de vez
+  Memo1.Append('SISTEMA: Registo removido do plano -> ' + lstPlano.Items[IndexSelecionado]);
+
+  // 4. Apagar efetivamente a linha selecionada da ListBox
+  lstPlano.Items.Delete(IndexSelecionado);
+end;
+
 procedure TFormDispatcher.btnPLCClick(Sender: TObject);
+var
+  result: integer;
 begin
   if btnPLC.Caption = 'CONECTAR PLC' then
   begin
-    // Lógica para ligar ao PLC aqui
-    btnPLC.Caption := 'DESCONECTAR';
-    shpStatusPLC.Brush.Color := clRed; // Muda de cor
+    // Tenta estabelecer a ligação com o autómato
+    result := M_connect(); //
+
+    if (result = 1) then // Se a ligação for bem sucedida (valor > 0)
+    begin
+      btnPLC.Caption := 'DESCONECTAR';
+      shpStatusPLC.Brush.Color := clLime; // Muda para Verde (Ligado)
+      Memo1.Append('SISTEMA: Conectado ao PLC com sucesso.');
+    end
+    else
+    begin
+      ShowMessage('Erro: Não foi possível conectar ao PLC. Verifica o programa do autómato!'); //
+    end;
   end
   else
   begin
-    // Lógica para desligar aqui
+    // Lógica para desligar
+    result := M_Disconnect(); // Encerra a conexão com o autómato
+
     btnPLC.Caption := 'CONECTAR PLC';
-    shpStatusPLC.Brush.Color := clLime; // Muda de cor
+    shpStatusPLC.Brush.Color := clRed; // Muda para Vermelho (Desligado)
+    Memo1.Append('SISTEMA: Desconectado do PLC.');
   end;
 end;
 
