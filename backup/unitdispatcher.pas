@@ -6,7 +6,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  comUnit;
+  Menus, ValEdit, ColorBox, ComCtrls, Buttons, Spin, AnchorDockPanel, comUnit,
+  Types;
 
 type
 
@@ -82,12 +83,64 @@ type
     BStart: TButton;
     BExecute: TButton;
     BInitiatilize: TButton;
+    Button1: TButton;
+    Button2: TButton;
+    Button3: TButton;
+    ComboBox1: TComboBox;
+    ComboBox2: TComboBox;
+    GroupBox1: TGroupBox;
+    GroupBox2: TGroupBox;
+    GroupBox3: TGroupBox;
+    GroupBox4: TGroupBox;
+    Label1: TLabel;
+    Label10: TLabel;
+    Label11: TLabel;
+    Label12: TLabel;
+    Label13: TLabel;
+    Label14: TLabel;
+    labelRelogio: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    Label4: TLabel;
+    Label5: TLabel;
+    Label6: TLabel;
+    Label7: TLabel;
+    Label8: TLabel;
+    Label9: TLabel;
     Memo1: TMemo;
+    Memo2: TMemo;
+    PageControl1: TPageControl;
+    Header: TPanel;
+    Footer: TPanel;
+    Panel1: TPanel;
+    SpinEdit1: TSpinEdit;
+    SpinEdit10: TSpinEdit;
+    SpinEdit2: TSpinEdit;
+    SpinEdit3: TSpinEdit;
+    SpinEdit4: TSpinEdit;
+    SpinEdit5: TSpinEdit;
+    SpinEdit6: TSpinEdit;
+    SpinEdit7: TSpinEdit;
+    SpinEdit8: TSpinEdit;
+    SpinEdit9: TSpinEdit;
+    TabSheet1: TTabSheet;
+    TabSheet2: TTabSheet;
+    TabSheet3: TTabSheet;
+    TabSheet4: TTabSheet;
     Timer1: TTimer;
     procedure BExecuteClick(Sender: TObject);
     procedure BInitiatilizeClick(Sender: TObject);
     procedure BStartClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure GroupBox1Click(Sender: TObject);
+    procedure GroupBox2Click(Sender: TObject);
+    procedure GroupBox3Click(Sender: TObject);
+    procedure Label1Click(Sender: TObject);
+    procedure Label2Click(Sender: TObject);
+    procedure Label3Click(Sender: TObject);
+    procedure HeaderClick(Sender: TObject);
+    procedure TabSheet2ContextPopup(Sender: TObject; MousePos: TPoint;
+      var Handled: Boolean);
     procedure Timer1Timer(Sender: TObject);
   private
 
@@ -234,33 +287,51 @@ begin
 
   // ******************************************
   // Simulating the result of the SQL query:
-  // Cenário de Avaliação - Inbound + Produção
+  // CENÁRIO COMPLETO DO VÍDEO DA ENTREGA
 
-  SetLength(Production_Orders, 4); // Agora precisamos de espaço para 4 ordens
+  SetLength(Production_Orders, 7); // Precisamos de 7 posições no array
 
-  // 1ª Ordem: Aprovisionamento de 1 matéria-prima azul
-  production_order.order_type   := Type_Delivery;     // Indica que é Inbound
-  production_order.part_numbers := 1;                 // Quantidade
-  production_order.part_type    := Part_Raw_Blue;     // Matéria-prima Azul (1)
-  Production_Orders[0]          := production_order;  // Guarda na posição 0
+  // 1. A produção de uma tampa cinzenta
+  production_order.order_type   := Type_Production;
+  production_order.part_numbers := 1;
+  production_order.part_type    := Part_Lid_Grey;    // Tampa Cinzenta (9)
+  Production_Orders[0]          := production_order;
 
-  // 2ª Ordem: Aprovisionamento de 1 matéria-prima cinzenta (metal)
-  production_order.order_type   := Type_Delivery;     // Indica que é Inbound
-  production_order.part_numbers := 1;                 // Quantidade
-  production_order.part_type    := Part_Raw_Grey;     // Matéria-prima Cinzenta (3)
-  Production_Orders[1]          := production_order;  // Guarda na posição 1
+  // 2. A produção de uma tampa verde
+  production_order.order_type   := Type_Production;
+  production_order.part_numbers := 1;
+  production_order.part_type    := Part_Lid_Green;   // Tampa Verde (8)
+  Production_Orders[1]          := production_order;
 
-  // 3ª Ordem: Produção de 1 Base Azul
-  production_order.order_type   := Type_Production;   // Indica que é Produção
-  production_order.part_numbers := 1;                 // Quantidade
-  production_order.part_type    := Part_Base_Blue;    // Produto Final: Base Azul (4)
-  Production_Orders[2]          := production_order;  // Guarda na posição 2
+  // 3. A produção de uma base azul
+  production_order.order_type   := Type_Production;
+  production_order.part_numbers := 1;
+  production_order.part_type    := Part_Base_Blue;   // Base Azul (4)
+  Production_Orders[2]          := production_order;
 
-  // 4ª Ordem: Produção de 1 Tampa Cinzenta
-  production_order.order_type   := Type_Production;   // Indica que é Produção
-  production_order.part_numbers := 1;                 // Quantidade
-  production_order.part_type    := Part_Lid_Grey;     // Produto Final: Tampa Cinzenta (9)
-  Production_Orders[3]          := production_order;  // Guarda na posição 3
+  // 4. A expedição de uma tampa verde
+  production_order.order_type   := Type_Expedition;
+  production_order.part_numbers := 1;
+  production_order.part_type    := Part_Lid_Green;   // Tampa Verde (8)
+  Production_Orders[3]          := production_order;
+
+  // 5. A expedição de uma base azul
+  production_order.order_type   := Type_Expedition;
+  production_order.part_numbers := 1;
+  production_order.part_type    := Part_Base_Blue;   // Base Azul (4)
+  Production_Orders[4]          := production_order;
+
+  // 6. O aprovisionamento de 1 matéria-prima azul
+  production_order.order_type   := Type_Delivery;
+  production_order.part_numbers := 1;
+  production_order.part_type    := Part_Raw_Blue;    // MP Azul (1)
+  Production_Orders[5]          := production_order;
+
+  // 7. O aprovisionamento de 1 matéria-prima cinzenta
+  production_order.order_type   := Type_Delivery;
+  production_order.part_numbers := 1;
+  production_order.part_type    := Part_Raw_Grey;    // MP Cinzenta (3)
+  Production_Orders[6]          := production_order;
   // ******************************************
 
 
@@ -319,9 +390,51 @@ begin
   idx_Task_Executing := 0;
 end;
 
+procedure TFormDispatcher.GroupBox1Click(Sender: TObject);
+begin
+
+end;
+
+procedure TFormDispatcher.GroupBox2Click(Sender: TObject);
+begin
+
+end;
+
+procedure TFormDispatcher.GroupBox3Click(Sender: TObject);
+begin
+
+end;
+
+procedure TFormDispatcher.Label1Click(Sender: TObject);
+begin
+
+end;
+
+procedure TFormDispatcher.Label2Click(Sender: TObject);
+begin
+
+end;
+
+procedure TFormDispatcher.Label3Click(Sender: TObject);
+begin
+
+end;
+
+procedure TFormDispatcher.HeaderClick(Sender: TObject);
+begin
+
+end;
+
+procedure TFormDispatcher.TabSheet2ContextPopup(Sender: TObject;
+  MousePos: TPoint; var Handled: Boolean);
+begin
+
+end;
+
 procedure TFormDispatcher.Timer1Timer(Sender: TObject);
 begin
   BExecuteClick(Self);
+  labelRelogio.Caption := FormatDateTime('hh:nn:ss', Now);
 end;
 
 
