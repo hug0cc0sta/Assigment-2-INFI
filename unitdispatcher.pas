@@ -86,18 +86,21 @@ type
     Button1: TButton;
     Button2: TButton;
     Button3: TButton;
+    Button4: TButton;
     ComboBox1: TComboBox;
     ComboBox2: TComboBox;
-    GroupBox1: TGroupBox;
     GroupBox2: TGroupBox;
     GroupBox3: TGroupBox;
     GroupBox4: TGroupBox;
+    GroupBox5: TGroupBox;
+    imgLogo: TImage;
     Label1: TLabel;
     Label10: TLabel;
     Label11: TLabel;
     Label12: TLabel;
     Label13: TLabel;
     Label14: TLabel;
+    Label15: TLabel;
     labelRelogio: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -107,12 +110,17 @@ type
     Label7: TLabel;
     Label8: TLabel;
     Label9: TLabel;
+    ListBox1: TListBox;
     Memo1: TMemo;
-    Memo2: TMemo;
+    Memo3: TMemo;
     PageControl1: TPageControl;
     Header: TPanel;
     Footer: TPanel;
-    Panel1: TPanel;
+    panelProducao: TPanel;
+    panelArmazem: TPanel;
+    Panel2: TPanel;
+    btnPLC: TSpeedButton;
+    shpStatusPLC: TShape;
     SpinEdit1: TSpinEdit;
     SpinEdit10: TSpinEdit;
     SpinEdit2: TSpinEdit;
@@ -132,14 +140,17 @@ type
     procedure BExecuteClick(Sender: TObject);
     procedure BInitiatilizeClick(Sender: TObject);
     procedure BStartClick(Sender: TObject);
+    procedure btnPLCClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure GroupBox1Click(Sender: TObject);
     procedure GroupBox2Click(Sender: TObject);
     procedure GroupBox3Click(Sender: TObject);
+    procedure imgLogoClick(Sender: TObject);
     procedure Label1Click(Sender: TObject);
     procedure Label2Click(Sender: TObject);
     procedure Label3Click(Sender: TObject);
     procedure HeaderClick(Sender: TObject);
+    procedure Panel2Click(Sender: TObject);
     procedure TabSheet2ContextPopup(Sender: TObject; MousePos: TPoint;
       var Handled: Boolean);
     procedure Timer1Timer(Sender: TObject);
@@ -385,6 +396,22 @@ begin
    end;
 end;
 
+procedure TFormDispatcher.btnPLCClick(Sender: TObject);
+begin
+  if btnPLC.Caption = 'CONECTAR PLC' then
+  begin
+    // Lógica para ligar ao PLC aqui
+    btnPLC.Caption := 'DESCONECTAR';
+    shpStatusPLC.Brush.Color := clRed; // Muda de cor
+  end
+  else
+  begin
+    // Lógica para desligar aqui
+    btnPLC.Caption := 'CONECTAR PLC';
+    shpStatusPLC.Brush.Color := clLime; // Muda de cor
+  end;
+end;
+
 procedure TFormDispatcher.FormCreate(Sender: TObject);
 begin
   SetLength(ShopTasks, 0);
@@ -406,6 +433,12 @@ begin
 
 end;
 
+procedure TFormDispatcher.imgLogoClick(Sender: TObject);
+begin
+
+end;
+
+
 procedure TFormDispatcher.Label1Click(Sender: TObject);
 begin
 
@@ -422,6 +455,11 @@ begin
 end;
 
 procedure TFormDispatcher.HeaderClick(Sender: TObject);
+begin
+
+end;
+
+procedure TFormDispatcher.Panel2Click(Sender: TObject);
 begin
 
 end;

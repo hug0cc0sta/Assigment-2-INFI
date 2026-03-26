@@ -1,63 +1,63 @@
 object FormDispatcher: TFormDispatcher
-  Left = 212
-  Height = 833
-  Top = 115
-  Width = 1648
+  Left = 245
+  Height = 817
+  Top = 121
+  Width = 1647
   Caption = 'Dispatcher'
-  ClientHeight = 833
-  ClientWidth = 1648
-  Color = clMenuHighlight
+  ClientHeight = 817
+  ClientWidth = 1647
+  Color = clGrayText
   DesignTimePPI = 120
   LCLVersion = '4.4.0.0'
   OnCreate = FormCreate
   object PageControl1: TPageControl
     Left = 0
-    Height = 698
+    Height = 682
     Top = 100
-    Width = 1648
-    ActivePage = TabSheet2
+    Width = 1647
+    ActivePage = TabSheet1
     Align = alClient
-    TabIndex = 1
+    TabIndex = 0
     TabOrder = 0
     object TabSheet1: TTabSheet
       Caption = 'Produção'
-      ClientHeight = 665
-      ClientWidth = 1640
+      ClientHeight = 649
+      ClientWidth = 1639
       object BExecute: TButton
-        Left = 736
-        Height = 47
-        Top = 592
-        Width = 184
+        Left = 1256
+        Height = 31
+        Top = 608
+        Width = 144
         Caption = 'Execute Cycle'
         ParentFont = False
         TabOrder = 0
         OnClick = BExecuteClick
       end
       object BInitiatilize: TButton
-        Left = 624
-        Height = 56
-        Top = 520
-        Width = 144
+        Left = 1432
+        Height = 32
+        Top = 616
+        Width = 72
         Caption = 'Initialize'
         ParentFont = False
         TabOrder = 1
         OnClick = BInitiatilizeClick
       end
       object GroupBox2: TGroupBox
-        Left = 48
-        Height = 401
-        Top = 48
+        Left = 40
+        Height = 553
+        Top = 72
         Width = 296
         Caption = 'Stock Inicial'
-        ClientHeight = 376
+        ClientHeight = 528
         ClientWidth = 292
         ParentBackground = False
         TabOrder = 2
         OnClick = GroupBox2Click
         object Label1: TLabel
-          Left = 16
+          Left = 17
           Height = 20
-          Top = 16
+          Top = 27
           Width = 84
           Caption = 'Matéria Azul'
           OnClick = Label1Click
@@ -65,23 +65,23 @@ object FormDispatcher: TFormDispatcher
         object Label2: TLabel
           Left = 17
           Height = 20
-          Top = 48
+          Top = 73
           Width = 93
           Caption = 'Matéria Verde'
           OnClick = Label2Click
         end
         object Label3: TLabel
-          Left = 16
+          Left = 17
           Height = 20
-          Top = 80
+          Top = 120
           Width = 91
           Caption = 'Matéria Cinza'
           OnClick = Label3Click
         end
         object SpinEdit1: TSpinEdit
-          Left = 168
+          Left = 169
           Height = 28
-          Top = 16
+          Top = 27
           Width = 71
           MaxValue = 5
           TabOrder = 0
@@ -89,7 +89,7 @@ object FormDispatcher: TFormDispatcher
         object SpinEdit2: TSpinEdit
           Left = 168
           Height = 28
-          Top = 48
+          Top = 73
           Width = 71
           MaxValue = 5
           TabOrder = 1
@@ -97,73 +97,73 @@ object FormDispatcher: TFormDispatcher
         object SpinEdit3: TSpinEdit
           Left = 168
           Height = 28
-          Top = 80
-          Width = 71
+          Top = 120
+          Width = 73
           MaxValue = 5
           TabOrder = 2
         end
         object Button1: TButton
-          Left = 40
+          Left = 41
           Height = 55
-          Top = 312
+          Top = 456
           Width = 200
           Caption = 'Inicializar Armazém'
           TabOrder = 3
         end
         object Label4: TLabel
-          Left = 16
+          Left = 17
           Height = 20
-          Top = 112
+          Top = 168
           Width = 64
           Caption = 'Base Azul'
         end
         object Label5: TLabel
-          Left = 16
+          Left = 15
           Height = 20
-          Top = 144
+          Top = 216
           Width = 73
           Caption = 'Base Verde'
         end
         object Label6: TLabel
-          Left = 16
+          Left = 15
           Height = 20
-          Top = 176
+          Top = 264
           Width = 71
           Caption = 'Base Cinza'
         end
         object SpinEdit4: TSpinEdit
           Left = 168
           Height = 28
-          Top = 112
+          Top = 168
           Width = 71
           MaxValue = 5
           TabOrder = 4
         end
         object Label7: TLabel
-          Left = 16
+          Left = 15
           Height = 20
-          Top = 208
+          Top = 312
           Width = 77
           Caption = 'Tampa Azul'
         end
         object Label8: TLabel
-          Left = 16
+          Left = 17
           Height = 20
-          Top = 240
+          Top = 360
           Width = 86
           Caption = 'Tampa Verde'
         end
         object Label9: TLabel
-          Left = 16
+          Left = 17
           Height = 20
-          Top = 272
+          Top = 408
           Width = 84
           Caption = 'Tampa Cinza'
         end
         object SpinEdit5: TSpinEdit
           Left = 168
           Height = 28
-          Top = 144
+          Top = 216
           Width = 71
           MaxValue = 5
           TabOrder = 5
@@ -171,15 +171,15 @@ object FormDispatcher: TFormDispatcher
         object SpinEdit6: TSpinEdit
           Left = 168
           Height = 28
-          Top = 176
+          Top = 264
           Width = 73
           MaxValue = 5
           TabOrder = 6
         end
         object SpinEdit7: TSpinEdit
-          Left = 168
+          Left = 170
           Height = 28
-          Top = 208
+          Top = 312
           Width = 71
           MaxValue = 5
           TabOrder = 7
@@ -187,28 +187,28 @@ object FormDispatcher: TFormDispatcher
         object SpinEdit8: TSpinEdit
           Left = 168
           Height = 28
-          Top = 240
+          Top = 360
           Width = 71
           MaxValue = 5
           TabOrder = 8
         end
         object SpinEdit9: TSpinEdit
-          Left = 168
+          Left = 169
           Height = 28
-          Top = 272
-          Width = 72
+          Top = 408
+          Width = 71
           MaxValue = 5
           TabOrder = 9
         end
       end
       object GroupBox3: TGroupBox
-        Left = 384
-        Height = 393
-        Top = 48
-        Width = 736
+        Left = 376
+        Height = 568
+        Top = 72
+        Width = 704
         Caption = 'Plano Semanal'
-        ClientHeight = 368
-        ClientWidth = 732
+        ClientHeight = 543
+        ClientWidth = 700
         ParentBackground = False
         TabOrder = 3
         OnClick = GroupBox3Click
@@ -284,40 +284,66 @@ object FormDispatcher: TFormDispatcher
           Caption = 'Quantidade'
         end
         object Button3: TButton
-          Left = 400
-          Height = 58
-          Top = 288
-          Width = 214
+          Left = 520
+          Height = 52
+          Top = 256
+          Width = 152
           Caption = 'Executar'
           TabOrder = 4
         end
-      end
-      object Memo2: TMemo
-        Left = 736
-        Height = 248
-        Top = 80
-        Width = 336
-        Anchors = [akTop, akLeft, akRight, akBottom]
-        Lines.Strings = (
-          'Memo2'
-        )
-        TabOrder = 4
+        object GroupBox5: TGroupBox
+          Left = 24
+          Height = 208
+          Top = 321
+          Width = 648
+          Caption = 'Sumário Semanal'
+          ClientHeight = 183
+          ClientWidth = 644
+          ParentColor = False
+          TabOrder = 5
+          object Memo3: TMemo
+            Left = 24
+            Height = 155
+            Top = 16
+            Width = 608
+            Lines.Strings = (
+              'Memo3'
+            )
+            TabOrder = 0
+          end
+        end
+        object Button4: TButton
+          Left = 352
+          Height = 52
+          Top = 256
+          Width = 152
+          Caption = 'Limpar'
+          TabOrder = 6
+        end
+        object ListBox1: TListBox
+          Left = 344
+          Height = 235
+          Top = 9
+          Width = 336
+          ItemHeight = 0
+          TabOrder = 7
+        end
       end
       object GroupBox4: TGroupBox
-        Left = 1159
-        Height = 578
-        Top = 40
-        Width = 449
-        Caption = 'GroupBox4'
-        ClientHeight = 553
-        ClientWidth = 445
+        Left = 1112
+        Height = 520
+        Top = 72
+        Width = 497
+        Caption = 'Logger da Fábrica'
+        ClientHeight = 495
+        ClientWidth = 493
         ParentBackground = False
-        TabOrder = 5
+        TabOrder = 4
         object Memo1: TMemo
-          Left = 1192
-          Height = 384
-          Top = 119
-          Width = 300
+          Left = 16
+          Height = 479
+          Top = 9
+          Width = 464
           Color = clBlack
           Font.CharSet = ANSI_CHARSET
           Font.Color = clLime
@@ -331,20 +357,50 @@ object FormDispatcher: TFormDispatcher
           TabOrder = 0
         end
       end
-    end
-    object TabSheet2: TTabSheet
-      Caption = 'Armazém'
-      ClientHeight = 665
-      ClientWidth = 1640
-      OnContextPopup = TabSheet2ContextPopup
-      object Panel1: TPanel
+      object panelProducao: TPanel
         Left = 0
         Height = 55
         Top = 0
-        Width = 1640
+        Width = 1639
         Align = alTop
         ClientHeight = 55
-        ClientWidth = 1640
+        ClientWidth = 1639
+        Color = clSilver
+        ParentBackground = False
+        ParentColor = False
+        TabOrder = 5
+        object Label15: TLabel
+          Left = 40
+          Height = 20
+          Top = 16
+          Width = 830
+          Caption = 'Painel da Produção - Inicializar stock, fazer e executar o plano semanal,  e observar o que está a acontecer no chão de fábrica'
+        end
+      end
+      object BStart: TButton
+        Left = 1128
+        Height = 32
+        Top = 608
+        Width = 104
+        Caption = 'Start'
+        ParentFont = False
+        TabOrder = 6
+        OnClick = BStartClick
+      end
+    end
+    object TabSheet2: TTabSheet
+      Caption = 'Armazém'
+      ClientHeight = 649
+      ClientWidth = 1639
+      OnContextPopup = TabSheet2ContextPopup
+      object panelArmazem: TPanel
+        Left = 0
+        Height = 55
+        Top = 0
+        Width = 1639
+        Align = alTop
+        ClientHeight = 55
+        ClientWidth = 1639
         Color = clSilver
         ParentBackground = False
         ParentColor = False
@@ -360,10 +416,10 @@ object FormDispatcher: TFormDispatcher
         end
       end
       object StringGrid1: TStringGrid
-        Left = 104
+        Left = 176
         Height = 560
-        Top = 88
-        Width = 1368
+        Top = 96
+        Width = 1208
         BorderStyle = bsNone
         Color = clWhite
         ColCount = 9
@@ -387,70 +443,139 @@ object FormDispatcher: TFormDispatcher
     Left = 0
     Height = 100
     Top = 0
-    Width = 1648
+    Width = 1647
     Align = alTop
     BevelOuter = bvNone
     ClientHeight = 100
-    ClientWidth = 1648
+    ClientWidth = 1647
     Color = 6829594
     ParentBackground = False
     ParentColor = False
     TabOrder = 1
     OnClick = HeaderClick
-    object GroupBox1: TGroupBox
-      Left = 1216
-      Height = 88
-      Top = 8
-      Width = 160
-      Caption = 'Conectar PLC'
-      ClientHeight = 63
-      ClientWidth = 156
-      ParentBackground = False
-      TabOrder = 0
-      OnClick = GroupBox1Click
-      object BStart: TButton
-        Left = 8
-        Height = 56
-        Top = 0
-        Width = 136
-        Caption = 'Start'
-        ParentFont = False
-        TabOrder = 0
-        OnClick = BStartClick
-      end
-    end
-    object labelRelogio: TLabel
-      Left = 1424
-      Height = 45
-      Top = 30
-      Width = 132
-      Caption = '00:00:00'
-      Font.CharSet = ANSI_CHARSET
-      Font.Height = -33
-      Font.Pitch = fpVariable
-      Font.Quality = fqDraft
-      Font.Style = [fsBold]
-      ParentFont = False
-    end
     object Label13: TLabel
-      Left = 40
+      Left = 120
       Height = 62
       Top = 16
       Width = 253
       Caption = 'HS Systems'
       Font.CharSet = ANSI_CHARSET
+      Font.Color = clWhite
       Font.Height = -47
       Font.Pitch = fpVariable
       Font.Quality = fqDraft
       Font.Style = [fsBold]
       ParentFont = False
     end
+    object Panel2: TPanel
+      Left = 1456
+      Height = 64
+      Top = 24
+      Width = 160
+      BevelOuter = bvLowered
+      ClientHeight = 64
+      ClientWidth = 160
+      Color = clBlack
+      ParentBackground = False
+      ParentColor = False
+      TabOrder = 0
+      OnClick = Panel2Click
+      object labelRelogio: TLabel
+        Left = 16
+        Height = 45
+        Top = 8
+        Width = 132
+        Caption = '00:00:00'
+        Font.CharSet = ANSI_CHARSET
+        Font.Color = clWhite
+        Font.Height = -33
+        Font.Pitch = fpVariable
+        Font.Quality = fqDraft
+        Font.Style = [fsBold]
+        ParentFont = False
+      end
+    end
+    object imgLogo: TImage
+      Left = 16
+      Height = 90
+      Top = 6
+      Width = 90
+      Picture.Data = {
+        1754506F727461626C654E6574776F726B47726170686963C404000089504E47
+        0D0A1A0A0000000D4948445200000080000000800806000000C33E61CB000004
+        8B49444154789CED9DEB6DE520108587D576943652478A4A1DDB466A9AFD13B4
+        E8AE1DF39A27E79322454AAE0D9CC30083AF2102000000000000000000000000
+        000000008094F037D6E5B0E2977501802D30C0E1C0008703031C0E0C703830C0
+        E1FCB62E8025CCFC76F57B4B29E54BAF44FA200280F8DCF5DECECF1E9D080A3D
+        04AC080F82C3CC6F3B0CE0310230F3BB751944D851B15DC237D7736500667EAF
+        3F1AF7539B04D60ACD56AC153EC2CC7CC6A46DDB9452FEEC2DD1356A06682B34
+        6B8252CA5724F1474C60213E1151D1BA51C5AAA277D4F05F4AD9DE16AD017E32
+        AE659BA8E70176448228B4A2DF4503EB0EA11E012AD6156FCA2116015EEEF35F
+        34F0D0066699C0932201D13FD13D894F6418012AD60DA115015EEEE9427C2207
+        7B01A745024FE213393000D13926F0263E91A1015E67C5D94DE0517C222303DC
+        254AB29AC0ABF844C643C05572249B093C8B4F6460809EF468161378179F48D9
+        00BDA9D1EFBF87364104F1898C8680DE0D9DA82688223E91EE76F0D41E7E3413
+        AC8ABFFB798727543381CCFC36BB9D1BA157ED2AA3E6730FAA43C04A85BC4782
+        0806BDC24526B017AF26D82D7EB361243E14843200D1BA09F881953245EAF9E1
+        1911FF49F49D66D889C68430ECF7027A7ADB95884FDBBEED67EAEF9A5BC5DAA4
+        AD582BE4AC803BAEB18AF48A209D012444F3600429C24D027F424AA8F65A1EE6
+        063B496300E95E9AD504690C50910CD1D9C27F1AB4976D5E968980ECC4C86282
+        ED438046F202EC23F41C602551B39AF5ABF78C1E05C2660267B913EC84ACDF15
+        A123C0283DBD357A8F1E25AC01467BEC88B0BDFF9B6118086B00B087230C30D3
+        4323F7EA118E3000B8677AC6CBCC1F3B0BD24329E5B3B97FF71C60B6378F5CFB
+        65AFC0B46D464004389CB06B5EC955C0CC75B55E31B3FBC1104480C3096B80D1
+        35F8480FF5D6FB25096B80197A848A2CE60CC7ED05DC458ED384AF84364029A5
+        D4DDBC51015705CF10FE53800742001E09037AA264133FDD2A40529C4CC257D2
+        1840FAB9FDF69A99267E690C40246782ACE21309EE0548E5AE07EE9FE2CBA1D2
+        84DCC018B8FFD2D7C37B3F1399D089A027AEB27E23434366E12BA27300A977DD
+        F0E0AB614AC3CEFF5D299317C24D026B43CF367879C0A24C96881B60671460A7
+        AF622B4EDF5ED6439808E055FCCA2E13EC1E2E9F5031C06A1490149F993F763D
+        C4B96A029E38707215CD9343A74EFDF4DEF35FD911093497CDAE878068E25766
+        4CA01DFA2B6E0D1055FCCA880978E01C85DDB8344074F12BA391C02263EACE00
+        59C4AF3C99C02AF4575C19209BF8959F4C505E8E94D5C68D01B28A5FE9318105
+        2E0C905DFC8AC78CA1B9014E11BFE2CD04A606B812DF7A52A4812713589E1D7C
+        2B3E4CA087D5D9C19761BF4D17F3012F9CF460028BA3631FC7FC76560C13C8A2
+        7D746CF7842F7234182DABA509344F0E9D9AED5B274A465831AA9509540CB0BA
+        D48B223ED1FCB6F7F767CDE7046278ADD0EA032112C393665BA93D169E2DC923
+        B985ABD956A9BF17204D84A1E989F406905A3D64109FC8C15E00B0257D0478EA
+        A991F20B1220021C0E0C703830C0E1C0008703031C0E0C000000000000000000
+        00000000000000000029F90B60CB0502189934880000000049454E44AE426082
+      }
+      Proportional = True
+      Stretch = True
+      OnClick = imgLogoClick
+    end
+    object shpStatusPLC: TShape
+      Left = 1240
+      Height = 72
+      Top = 16
+      Width = 184
+      Brush.Color = clLime
+    end
+    object btnPLC: TSpeedButton
+      Left = 1240
+      Height = 70
+      Top = 18
+      Width = 184
+      Caption = 'CONECTAR PLC'
+      Color = clWhite
+      Flat = True
+      Font.CharSet = ANSI_CHARSET
+      Font.Color = clWhite
+      Font.Height = -20
+      Font.Name = 'Segoe UI'
+      Font.Pitch = fpVariable
+      Font.Quality = fqDraft
+      Font.Style = [fsBold]
+      ParentFont = False
+      OnClick = btnPLCClick
+    end
   end
   object Footer: TPanel
     Left = 0
     Height = 35
-    Top = 798
-    Width = 1648
+    Top = 782
+    Width = 1647
     Align = alBottom
     Caption = 'L.EGI INFI 25/26 | Hugo Costa & Salvador Rosa'
     Color = clTeal
@@ -467,7 +592,7 @@ object FormDispatcher: TFormDispatcher
   end
   object Timer1: TTimer
     OnTimer = Timer1Timer
-    Left = 1600
-    Top = 16
+    Left = 912
+    Top = 32
   end
 end
