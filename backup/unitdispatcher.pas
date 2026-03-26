@@ -83,9 +83,9 @@ type
     BStart: TButton;
     BExecute: TButton;
     BInitiatilize: TButton;
-    Button1: TButton;
+    btnInicializarArmazem: TButton;
     btnAdicionar: TButton;
-    Button3: TButton;
+    btnExecutar: TButton;
     btnLimpar: TButton;
     cbTipoTarefa: TComboBox;
     cbTipoPeca: TComboBox;
@@ -111,7 +111,7 @@ type
     Label8: TLabel;
     Label9: TLabel;
     lstPlano: TListBox;
-    Memo1: TMemo;
+    memLogger: TMemo;
     Memo3: TMemo;
     PageControl1: TPageControl;
     Header: TPanel;
@@ -142,6 +142,7 @@ type
     procedure BInitiatilizeClick(Sender: TObject);
     procedure BStartClick(Sender: TObject);
     procedure btnAdicionarClick(Sender: TObject);
+    procedure btnExecutarClick(Sender: TObject);
     procedure btnInicializarArmazemClick(Sender: TObject);
     procedure btnLimparClick(Sender: TObject);
     procedure btnPLCClick(Sender: TObject);
@@ -167,6 +168,8 @@ type
     procedure Execute_Delivery_Order(var task:TTask; shopfloor: TResources ); //inbound dispacher
 
     procedure Execute_Production_Order(var task:TTask; shopfloor: TResources ); //Production
+
+    procedure LogMsg(Texto: string); //Logger para aparecer as horas
 
     function GET_AR_Position (Part : integer; Warehouse : array of integer): integer;
     procedure SET_AR_Position (idx : integer; Part : integer; var Warehouse : array of integer);
@@ -451,7 +454,86 @@ begin
   lstPlano.Items.Add(tarefa + ' | ' + peca + ' | ' + IntToStr(qtd));
 
   // Opcional: Dar um aviso no Log do sistema
-  Memo1.Append('SISTEMA: Adicionado ao plano -> ' + tarefa + ' de ' + IntToStr(qtd) + 'x ' + peca);
+  LogMsg('SISTEMA: Adicionado ao plano -> ' + tarefa + ' de ' + IntToStr(qtd) + 'x ' + peca);
+end;
+
+//Botão Executar
+
+procedure TFormDispatcher.btnExecutarClick(Sender: TObject);
+var
+  i: integer;
+  linha, tarefaStr, pecaStr, qtdStr: string;
+  pos1, pos2: integer;
+  ordem: TProduction_Order;
+begin
+  // --- FASE 1: Verificações de Segurança ---
+  if lstPlano.Items.Count = 0 then
+  begin
+    ShowMessage('Aviso: O plano está vazio! Adicione tarefas primeiro.');
+    Exit;
+  end;
+
+  // Garante que o Autómato está ligado antes de enviarmos comandos
+  if M_Connection_Status() <= 0 then
+  begin
+    ShowMessage('Erro Crítico: O PLC não está conectado! Clique em "CONECTAR PLC" primeiro.');
+    Exit;
+  end;
+
+  // --- FASE 2: Preparar o Array Principal ---
+  SetLength(Production_Orders, lstPlano.Items.Count);
+
+  // --- FASE 3: Ler e Traduzir Linha a Linha ---
+  for i := 0 to lstPlano.Items.Count - 1 do
+  begin
+    linha := lstPlano.Items[i]; // Exemplo que estamos a ler: "Produção | Tampa Verde | 2"
+
+    // Cortar a string para extrair a Tarefa
+    pos1 := Pos(' | ', linha);
+    tarefaStr := Copy(linha, 1, pos1 - 1);
+    linha := Copy(linha, pos1 + 3, Length(linha)); // O que sobra: "Tampa Verde | 2"
+
+    // Cortar a string para extrair a Peça e a Quantidade
+    pos2 := Pos(' | ', linha);
+    pecaStr := Copy(linha, 1, pos2 - 1);
+    qtdStr := Copy(linha, pos2 + 3, Length(linha));
+
+    // --- TRADUÇÃO DAS TAREFAS ---
+    if tarefaStr = 'Aprovisionamento' then ordem.order_type := Type_Delivery
+    else if tarefaStr = 'Produção' then ordem.order_type := Type_Production
+    else if tarefaStr = 'Expedição' then ordem.order_type := Type_Expedition;
+
+    // --- TRADUÇÃO DAS PEÇAS ---
+    if pecaStr = 'Matéria Azul' then ordem.part_type := Part_Raw_Blue
+    else if pecaStr = 'Matéria Verde' then ordem.part_type := Part_Raw_Green
+    else if pecaStr = 'Matéria Cinza' then ordem.part_type := Part_Raw_Grey
+    else if pecaStr = 'Base Azul' then ordem.part_type := Part_Base_Blue
+    else if pecaStr = 'Base Verde' then ordem.part_type := Part_Base_Green
+    else if pecaStr = 'Base Cinza' then ordem.part_type := Part_Base_Grey
+    else if pecaStr = 'Tampa Azul' then ordem.part_type := Part_Lid_Blue
+    else if pecaStr = 'Tampa Verde' then ordem.part_type := Part_Lid_Green
+    else if pecaStr = 'Tampa Cinza' then ordem.part_type := Part_Lid_Grey;
+
+    // --- TRADUÇÃO DA QUANTIDADE ---
+    ordem.part_numbers := StrToInt(qtdStr);
+
+    // Guardar esta ordem devidamente traduzida no nosso array global
+    Production_Orders[i] := ordem;
+  end;
+
+  // --- FASE 4: Iniciar o Processo Fabril ---
+  LogMsg('SISTEMA: A converter ' + IntToStr(lstPlano.Items.Count) + ' linha(s) para tarefas de máquina...');
+
+  // Reiniciamos o índice de execução (crucial se fores executar vários planos seguidos)
+  idx_Task_Executing := 0;
+
+  // Usamos a função do professor para transformar estas ordens nas "Stages" da máquina de estados
+  SimpleScheduler(Production_Orders, ShopTasks);
+
+  // Ligar o "motor" (se não estivesse já ligado)
+  Timer1.Enabled := true;
+
+  LogMsg('SISTEMA: Execução do plano iniciada!');
 end;
 
 
@@ -513,7 +595,7 @@ begin
       WAREHOUSE_Parts[cel] := 0;
   end;
 
-  Memo1.Append('SISTEMA: A inicializar ' + IntToStr(TotalPecas) + ' peça(s) no armazém...');
+  LogMsg('SISTEMA: A inicializar ' + IntToStr(TotalPecas) + ' peça(s) no armazém...');
 
   posIndex := 1; // Aponta para o primeiro espaço válido (InitPositions[1] que é a célula 1)
 
@@ -529,7 +611,11 @@ begin
   InserirPeca(Part_Lid_Green, spnTampaVerde.Value); // Código 8
   InserirPeca(Part_Lid_Grey, spnTampaCinza.Value);  // Código 9
 
-  Memo1.Append('SISTEMA: Inicialização do armazém concluída!');
+  LogMsg('SISTEMA: Inicialização do armazém concluída!');
+
+  btnInicializarArmazem.Enabled := False;
+  LogMsg('SISTEMA: Botão de inicialização bloqueado por segurança.');
+
 end;
 
 //Botão Limpar
@@ -554,7 +640,7 @@ begin
   end;
 
   // 3. Nuance: Registar no log da fábrica o que estamos a remover antes de o apagar de vez
-  Memo1.Append('SISTEMA: Registo removido do plano -> ' + lstPlano.Items[IndexSelecionado]);
+  LogMsg('SISTEMA: Registo removido do plano -> ' + lstPlano.Items[IndexSelecionado]);
 
   // 4. Apagar efetivamente a linha selecionada da ListBox
   lstPlano.Items.Delete(IndexSelecionado);
@@ -573,7 +659,14 @@ begin
     begin
       btnPLC.Caption := 'DESCONECTAR';
       shpStatusPLC.Brush.Color := clLime; // Muda para Verde (Ligado)
-      Memo1.Append('SISTEMA: Conectado ao PLC com sucesso.');
+      LogMsg('SISTEMA: Conectado ao PLC com sucesso.');
+
+      //Desbloqueia Botões
+      btnInicializarArmazem.Enabled := True;
+      btnAdicionar.Enabled := True;
+      btnLimpar.Enabled := True;
+      btnExecutar.Enabled := True;
+
     end
     else
     begin
@@ -587,7 +680,27 @@ begin
 
     btnPLC.Caption := 'CONECTAR PLC';
     shpStatusPLC.Brush.Color := clRed; // Muda para Vermelho (Desligado)
-    Memo1.Append('SISTEMA: Desconectado do PLC.');
+    LogMsg('SISTEMA: Desconectado do PLC.');
+
+    //Bloqueia Botoes
+    btnInicializarArmazem.Enabled := False;
+    btnAdicionar.Enabled := False;
+    btnLimpar.Enabled := False;
+    btnExecutar.Enabled := False;
+
+    // --- NOVIDADE: Colocar as caixas a zero ao desconectar ---
+    spnMatAzul.Value := 0;
+    spnMatVerde.Value := 0;
+    spnMatCinza.Value := 0;
+    spnBaseAzul.Value := 0;
+    spnBaseVerde.Value := 0;
+    spnBaseCinza.Value := 0;
+    spnTampaAzul.Value := 0;
+    spnTampaVerde.Value := 0;
+    spnTampaCinza.Value := 0;
+
+    LogMsg('SISTEMA: Valores de Stock Inicial repostos a zero.');
+
   end;
 end;
 
@@ -676,7 +789,7 @@ begin
   r := r + M_Initialize(28, Part_Lid_Green);// 1 Tampa verde na pos 28
 
   if( r > 4) then
-    Memo1.Append('Innitiatialization with errors');
+    LogMsg('Innitiatialization with errors');
 
   // Update the Warehouse according to the previous innitialization
   SetLength(WAREHOUSE_Parts, 55);                // Parts in the warehouse
@@ -750,7 +863,7 @@ begin
       begin
         if(idx < Length(tasks)) then
         begin
-          Memo1.Append('Task Expedition');
+          LogMsg('Task Expedition');
           Execute_Expedition_Order(tasks[idx], shopfloor);
 
           // Next Operation to be executed.
@@ -765,7 +878,7 @@ begin
       begin
         if(idx < Length(tasks)) then
         begin
-          Memo1.Append('Task Production');
+          LogMsg('Task Production');
 
           Execute_Production_Order(tasks[idx], shopfloor);
 
@@ -780,7 +893,7 @@ begin
       begin
         if(idx < Length(tasks)) then
         begin
-          Memo1.Append('Task Inbound/Delivery');
+          LogMsg('Task Inbound/Delivery');
 
           // Chama o procedimento
           Execute_Delivery_Order(tasks[idx], shopfloor);
@@ -824,7 +937,7 @@ begin
           if(shopfloor.AR_free) then  //AR is free
           begin
             Part_Position_AR := GET_AR_Position(Part_Type, WAREHOUSE_Parts);
-            Memo1.Append(IntToStr(Part_Position_AR));
+            LogMsg(IntToStr(Part_Position_AR));
 
             if( Part_Position_AR > 0 ) then
             begin
@@ -840,7 +953,7 @@ begin
         // Request to unload that part
         Stage_Unload :
         begin
-          Memo1.Append('AR Unloading: ' + IntToStr(Part_Position_AR));
+          LogMsg('AR Unloading: ' + IntToStr(Part_Position_AR));
           r := M_Unload(Part_Position_AR);
 
           if ( r = 1 ) then                                 //sucess
@@ -887,7 +1000,7 @@ begin
         // --- FASE 1: Iniciar a Tarefa ---
         Stage_To_Be_Started:
         begin
-           Memo1.Append('INBOUND: A iniciar a receção da peça tipo ' + IntToStr(part_type));
+           LogMsg('INBOUND: A iniciar a receção da peça tipo ' + IntToStr(part_type));
            // Passa imediatamente para a próxima fase, onde vamos enviar o comando ao Factory IO
            current_operation := Stage_Req_Inbound;
         end;
@@ -904,7 +1017,7 @@ begin
             // Se o comando foi aceite corretamente (retornou 1)
             if (r = 1) then
             begin
-               Memo1.Append('INBOUND: Comando aceite. A aguardar chegada da peça...');
+               LogMsg('INBOUND: Comando aceite. A aguardar chegada da peça...');
                // Avança para a fase de espera (o tapete vai rolar até a peça chegar ao armazém)
                current_operation := Stage_Wait_Inbound_Tapete;
             end;
@@ -918,7 +1031,7 @@ begin
           // Aqui verificamos ciclicamente se o sensor do tapete de entrada já detetou a nossa peça.
           if (shopfloor.AR_In_Part = part_type) then
           begin
-            Memo1.Append('INBOUND: Peça chegou ao tapete do armazém. A procurar espaço livre...');
+            LogMsg('INBOUND: Peça chegou ao tapete do armazém. A procurar espaço livre...');
             // A peça chegou fisicamente! Agora vamos procurar um lugar para a guardar
             current_operation := Stage_Find_Free_AR;
           end;
@@ -934,14 +1047,14 @@ begin
           // Como as posições do armazém vão de 1 a 54, se for > 0 significa que encontrou espaço.
           if (part_position_AR > 0) then
           begin
-             Memo1.Append('INBOUND: Encontrada posição livre -> ' + IntToStr(part_position_AR));
+             LogMsg('INBOUND: Encontrada posição livre -> ' + IntToStr(part_position_AR));
              // Já temos um alvo. Vamos dar ordem ao braço do armazém para ir buscar a peça.
              current_operation := Stage_Load_AR;
           end
           else
           begin
              // Se part_position_AR for 0, o armazém está totalmente cheio.
-             Memo1.Append('ERRO INBOUND: Armazém cheio! Não é possível guardar a peça.');
+             LogMsg('ERRO INBOUND: Armazém cheio! Não é possível guardar a peça.');
              // Por agora, o código fica bloqueado nesta fase até que se liberte espaço.
           end;
         end;
@@ -958,7 +1071,7 @@ begin
             // Se o comando foi executado corretamente (retornou 1)
             if (r = 1) then
             begin
-               Memo1.Append('INBOUND: Peça guardada na posição ' + IntToStr(part_position_AR));
+               LogMsg('INBOUND: Peça guardada na posição ' + IntToStr(part_position_AR));
                // Guardamos a informação de que a posição deixou de estar livre e tem a nova peça
                SET_AR_Position(part_position_AR, part_type, WAREHOUSE_Parts);
                // A ordem de Aprovisionamento está oficialmente concluída!
@@ -1001,7 +1114,7 @@ begin
         // --- FASE 1: Iniciar. Anunciar a ordem e passar para a procura ---
         Stage_To_Be_Started:
         begin
-           Memo1.Append('PRODUÇÃO: Iniciar peça ' + IntToStr(part_type) + '. A procurar MP ' + IntToStr(raw_material_needed));
+           LogMsg('PRODUÇÃO: Iniciar peça ' + IntToStr(part_type) + '. A procurar MP ' + IntToStr(raw_material_needed));
            current_operation :=  Stage_GetPart;
         end;
 
@@ -1015,13 +1128,13 @@ begin
 
             if( part_position_AR > 0 ) then
             begin
-               Memo1.Append('PRODUÇÃO: MP encontrada na posição ' + IntToStr(part_position_AR));
+               LogMsg('PRODUÇÃO: MP encontrada na posição ' + IntToStr(part_position_AR));
                current_operation :=  Stage_Unload;
             end
             else
             begin
                // Fica aqui "preso" até que a matéria-prima dê entrada no armazém
-               Memo1.Append('AVISO PRODUÇÃO: A aguardar MP ' + IntToStr(raw_material_needed) + ' no armazém...');
+               LogMsg('AVISO PRODUÇÃO: A aguardar MP ' + IntToStr(raw_material_needed) + ' no armazém...');
             end;
           end;
         end;
@@ -1033,7 +1146,7 @@ begin
 
           if ( r = 1 ) then
           begin
-             Memo1.Append('PRODUÇÃO: A descarregar MP...');
+             LogMsg('PRODUÇÃO: A descarregar MP...');
              current_operation := Stage_Wait_AR_Out_Prod;
           end;
         end;
@@ -1044,7 +1157,7 @@ begin
           // A peça tem de estar no tapete de saída antes de enviarmos para a máquina
           if( ShopResources.AR_Out_Part = raw_material_needed ) then
           begin
-             Memo1.Append('PRODUÇÃO: MP no tapete de saída. A enviar para célula ' + IntToStr(part_destination));
+             LogMsg('PRODUÇÃO: MP no tapete de saída. A enviar para célula ' + IntToStr(part_destination));
              current_operation := Stage_Req_Production;
           end;
         end;
@@ -1057,7 +1170,7 @@ begin
 
           if (r = 1) then
           begin
-             Memo1.Append('PRODUÇÃO: A processar na máquina. A aguardar regresso...');
+             LogMsg('PRODUÇÃO: A processar na máquina. A aguardar regresso...');
              // A peça já não está no armazém, podemos libertar o "nosso" registo virtual
              SET_AR_Position(part_position_AR, 0, WAREHOUSE_Parts);
              current_operation := Stage_Wait_Prod_Return;
@@ -1070,7 +1183,7 @@ begin
           // Alterado para '> 0'. Se há uma peça no tapete, é a nossa!
           if (ShopResources.AR_In_Part > 0) then
           begin
-             Memo1.Append('PRODUÇÃO: Produto chegou à entrada! ID lido: ' + IntToStr(ShopResources.AR_In_Part));
+             LogMsg('PRODUÇÃO: Produto chegou à entrada! ID lido: ' + IntToStr(ShopResources.AR_In_Part));
              current_operation := Stage_Find_Free_AR;
           end;
         end;
@@ -1083,7 +1196,7 @@ begin
           if (part_position_AR > 0) then
              current_operation := Stage_Load_AR
           else
-             Memo1.Append('ERRO PRODUÇÃO: Armazém cheio! Não é possível guardar produto final.');
+             LogMsg('ERRO PRODUÇÃO: Armazém cheio! Não é possível guardar produto final.');
         end;
 
         // --- FASE 8: Carregar o Produto Final para o Armazém ---
@@ -1095,14 +1208,14 @@ begin
 
             if (r = 1) then
             begin
-               Memo1.Append('PRODUÇÃO: Concluída! Guardado na pos ' + IntToStr(part_position_AR));
+               LogMsg('PRODUÇÃO: Concluída! Guardado na pos ' + IntToStr(part_position_AR));
                SET_AR_Position(part_position_AR, part_type, WAREHOUSE_Parts);
                current_operation := Stage_Finished;
             end
             else if (r < 0) then
             begin
                // AVISO: Se por acaso o M_Load falhar (ex: -104 ou -109), ele avisa em vez de congelar em silêncio
-               Memo1.Append('AVISO PRODUÇÃO: A aguardar que M_Load aceite o comando... Erro: ' + IntToStr(r));
+               LogMsg('AVISO PRODUÇÃO: A aguardar que M_Load aceite o comando... Erro: ' + IntToStr(r));
             end;
           end;
         end;
@@ -1116,6 +1229,12 @@ begin
   end; // fim do with task
 end;
 
+// Função centralizada para escrever no Logger com a hora exata
+procedure TFormDispatcher.LogMsg(Texto: string);
+begin
+  // O formato 'hh:nn:ss' traduz-se para horas:minutos:segundos (ex: [14:30:15])
+  memLogger.Append(FormatDateTime('[hh:nn:ss] ', Now) + Texto);
+end;
 
 
 end.

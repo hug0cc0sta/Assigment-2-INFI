@@ -1,7 +1,7 @@
 object FormDispatcher: TFormDispatcher
-  Left = 600
+  Left = 354
   Height = 654
-  Top = 189
+  Top = 319
   Width = 1318
   Caption = 'Dispatcher'
   ClientHeight = 654
@@ -33,6 +33,7 @@ object FormDispatcher: TFormDispatcher
         Caption = 'Execute Cycle'
         ParentFont = False
         TabOrder = 0
+        Visible = False
         OnClick = BExecuteClick
       end
       object BInitiatilize: TButton
@@ -43,6 +44,7 @@ object FormDispatcher: TFormDispatcher
         Caption = 'Initialize'
         ParentFont = False
         TabOrder = 1
+        Visible = False
         OnClick = BInitiatilizeClick
       end
       object GroupBox2: TGroupBox
@@ -110,6 +112,7 @@ object FormDispatcher: TFormDispatcher
           Top = 365
           Width = 160
           Caption = 'Inicializar Armazém'
+          Enabled = False
           TabOrder = 3
           OnClick = btnInicializarArmazemClick
         end
@@ -263,6 +266,7 @@ object FormDispatcher: TFormDispatcher
           Top = 128
           Width = 170
           Caption = 'Adicionar'
+          Enabled = False
           TabOrder = 3
           OnClick = btnAdicionarClick
         end
@@ -287,13 +291,15 @@ object FormDispatcher: TFormDispatcher
           Width = 62
           Caption = 'Quantidade'
         end
-        object Button3: TButton
+        object btnExecutar: TButton
           Left = 416
           Height = 42
           Top = 205
           Width = 122
           Caption = 'Executar'
+          Enabled = False
           TabOrder = 4
+          OnClick = btnExecutarClick
         end
         object GroupBox5: TGroupBox
           Left = 19
@@ -322,6 +328,7 @@ object FormDispatcher: TFormDispatcher
           Top = 205
           Width = 122
           Caption = 'Limpar'
+          Enabled = False
           TabOrder = 6
           OnClick = btnLimparClick
         end
@@ -344,7 +351,7 @@ object FormDispatcher: TFormDispatcher
         ClientWidth = 394
         ParentBackground = False
         TabOrder = 4
-        object Memo1: TMemo
+        object memLogger: TMemo
           Left = 13
           Height = 383
           Top = 7
@@ -390,6 +397,7 @@ object FormDispatcher: TFormDispatcher
         Caption = 'Start'
         ParentFont = False
         TabOrder = 6
+        Visible = False
         OnClick = BStartClick
       end
     end
@@ -563,7 +571,7 @@ object FormDispatcher: TFormDispatcher
       Top = 14
       Width = 147
       Caption = 'CONECTAR PLC'
-      Color = clWhite
+      Color = clCream
       Flat = True
       Font.CharSet = ANSI_CHARSET
       Font.Color = clWhite
