@@ -1,7 +1,7 @@
 object FormDispatcher: TFormDispatcher
-  Left = 245
+  Left = 148
   Height = 817
-  Top = 121
+  Top = 132
   Width = 1647
   Caption = 'Dispatcher'
   ClientHeight = 817
@@ -17,8 +17,11 @@ object FormDispatcher: TFormDispatcher
     Width = 1647
     ActivePage = TabSheet1
     Align = alClient
-    TabIndex = 0
+    TabIndex = 1
     TabOrder = 0
+    object TabSheet5: TTabSheet
+      Caption = 'Info'
+    end
     object TabSheet1: TTabSheet
       Caption = 'Produção'
       ClientHeight = 649
