@@ -6,8 +6,8 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  Menus, ValEdit, ColorBox, ComCtrls, Buttons, Spin, Grids, AnchorDockPanel,
-  comUnit, Types;
+  Menus, ComCtrls, Buttons, Spin, Grids,
+  comUnit;
 
 type
 
@@ -1057,7 +1057,7 @@ end;
 //BOTÃO INICIALIZAR ARMAZEM
 procedure TFormDispatcher.btnInicializarArmazemClick(Sender: TObject);
 var
-  TotalPecas, posIndex, cel, i, r: integer;
+  TotalPecas, posIndex, cel, r: integer;
   InitPositions: array[1..6] of integer;
 
   // Vamos criar um procedimento local dentro deste botão para facilitar a inserção
@@ -1069,6 +1069,8 @@ var
     begin
       // Envia o comando para a posição válida atual
       r := M_Initialize(InitPositions[posIndex], CodigoPeca);
+      if r <= 0 then
+       LogMsg('AVISO: Falha ao inserir peça na posição ' + IntToStr(InitPositions[posIndex]));
 
       // Regista na nossa matriz mental
       WAREHOUSE_Parts[InitPositions[posIndex]] := CodigoPeca;
@@ -1340,7 +1342,7 @@ begin
   NomeFicheiro := 'Relatorio_HS_Systems_' + FormatDateTime('yyyymmdd_hhnnss', Now) + '.txt';
 
   try
-    // 3. A magia do Lazarus: Guardar tudo num ficheiro com 1 linha de código!
+    // 3. Guardar tudo num ficheiro com 1 linha de código!
     memLogger.Lines.SaveToFile(NomeFicheiro);
 
     // 4. Avisar o utilizador (no próprio log e com um pop-up)

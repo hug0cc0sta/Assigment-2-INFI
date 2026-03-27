@@ -1,10 +1,10 @@
 object FormDispatcher: TFormDispatcher
-  Left = 164
-  Height = 803
-  Top = 73
+  Left = 64
+  Height = 802
+  Top = 138
   Width = 1645
   Caption = 'Dispatcher'
-  ClientHeight = 803
+  ClientHeight = 802
   ClientWidth = 1645
   Color = clGrayText
   DesignTimePPI = 120
@@ -12,18 +12,18 @@ object FormDispatcher: TFormDispatcher
   OnCreate = FormCreate
   object PageControl1: TPageControl
     Left = 0
-    Height = 673
+    Height = 672
     Top = 100
     Width = 1645
-    ActivePage = TabSheet5
+    ActivePage = TabSheet1
     Align = alClient
     Font.Style = [fsBold]
     ParentFont = False
-    TabIndex = 0
+    TabIndex = 1
     TabOrder = 0
     object TabSheet5: TTabSheet
       Caption = 'Info'
-      ClientHeight = 640
+      ClientHeight = 639
       ClientWidth = 1637
       object Shape2: TShape
         Left = 24
@@ -91,7 +91,7 @@ object FormDispatcher: TFormDispatcher
       object Shape5: TShape
         Left = 24
         Height = 282
-        Top = 7
+        Top = 8
         Width = 432
       end
       object PageControl2: TPageControl
@@ -117,7 +117,7 @@ object FormDispatcher: TFormDispatcher
             Height = 440
             Top = 16
             Width = 655
-            Caption = 'Painel da Produção é o lugar do sistema onde é possível Inicializar stock, '#13#10'fazer e executar o plano semanal,  e observar o que está a acontecer no chão de fábrica'#13#10#13#10'Sendo assim, o Painel da Produção está dividido em 3 partes principais:'#13#10#13#10'1)No painel do stock inicial é possível inicializar o stock'#13#10'existente inicialmente na fábrica. '#13#10'Existem 9 peças diferentes, correspondendo a 3 tipos '#13#10'de 3 cores cada - Azul, Verde e Cinza'#13#10#13#10'Só é possível inicializar o stock uma vez e não é '#13#10'possível inicializar mais que uma soma de 6 '#13#10'peças de qualquer tipo de uma vez.'#13#10#13#10'2)No painel de plano de produção é possível adicionar várias tarefas de produção a serem '#13#10'executadas durante a semana. Cada pedido tem de ser feito individualmente, e se, '#13#10'eventualmente, for preciso retirar algum, é possível selecionando a linha (sendo possível selecionar'#13#10'mais do que uma linha) do pedido e depois carregando no botão limpar.'#13#10'Tendo todas as tarefas no plano podemos executar o plano, usando o botão correspondente.'#13#10#13#10#13#10'3)É uma janela onde é possível obsservar aquilo que se está a passar na fábrica, com vários logs'
+            Caption = 'Painel da Produção é o lugar do sistema onde é possível Inicializar stock, '#13#10'fazer e executar o plano semanal,  e observar o que está a acontecer no chão de fábrica'#13#10#13#10'Sendo assim, o Painel da Produção está dividido em 3 partes principais:'#13#10#13#10'1)No painel do stock inicial é possível inicializar o stock'#13#10'existente inicialmente na fábrica. '#13#10'Existem 9 peças diferentes, correspondendo a 3 tipos '#13#10'de 3 cores cada - Azul, Verde e Cinza'#13#10#13#10'Só é possível inicializar o stock uma vez e não é '#13#10'possível inicializar mais que uma soma de 6 '#13#10'peças de qualquer tipo de uma vez.'#13#10#13#10'2)No painel de plano de produção é possível adicionar várias tarefas de produção a serem '#13#10'executadas durante a semana. Cada pedido tem de ser feito individualmente, e se, '#13#10'eventualmente, for preciso retirar algum, é possível selecionando a linha (sendo possível selecionar'#13#10'mais do que uma linha) do pedido e depois carregando no botão limpar.'#13#10'Tendo todas as tarefas no plano podemos executar o plano, usando o botão correspondente.'#13#10#13#10#13#10'3)É uma janela onde é possível observar aquilo que se está a passar na fábrica, com vários logs'
             Color = clGray
             Font.CharSet = ANSI_CHARSET
             Font.Pitch = fpVariable
@@ -1526,7 +1526,7 @@ object FormDispatcher: TFormDispatcher
     end
     object TabSheet1: TTabSheet
       Caption = 'Produção'
-      ClientHeight = 640
+      ClientHeight = 639
       ClientWidth = 1637
       object BExecute: TButton
         Left = 1290
@@ -1738,7 +1738,7 @@ object FormDispatcher: TFormDispatcher
           Transparent = False
         end
         object Label9: TLabel
-          Left = 13
+          Left = 12
           Height = 20
           Top = 408
           Width = 129
@@ -1867,14 +1867,14 @@ object FormDispatcher: TFormDispatcher
           Left = 8
           Height = 508
           Top = 9
-          Width = 310
-          ActivePage = TabSheet7
-          TabIndex = 1
+          Width = 322
+          ActivePage = TabSheet6
+          TabIndex = 0
           TabOrder = 3
           object TabSheet6: TTabSheet
             Caption = 'Aprovisionamento'
             ClientHeight = 475
-            ClientWidth = 302
+            ClientWidth = 314
             object cbProduto: TComboBox
               Left = 100
               Height = 28
@@ -2543,7 +2543,7 @@ object FormDispatcher: TFormDispatcher
           object TabSheet7: TTabSheet
             Caption = 'Produção'
             ClientHeight = 475
-            ClientWidth = 302
+            ClientWidth = 314
             object cbProdProd: TComboBox
               Left = 100
               Height = 28
@@ -3636,7 +3636,7 @@ object FormDispatcher: TFormDispatcher
           object Expedicao: TTabSheet
             Caption = 'Expedição'
             ClientHeight = 475
-            ClientWidth = 302
+            ClientWidth = 314
             object Label19: TLabel
               Left = 20
               Height = 20
@@ -3703,7 +3703,7 @@ object FormDispatcher: TFormDispatcher
             end
             object Image3: TImage
               Left = 72
-              Height = 167
+              Height = 168
               Top = 224
               Width = 166
               Picture.Data = {
@@ -4370,7 +4370,7 @@ object FormDispatcher: TFormDispatcher
     end
     object TabSheet2: TTabSheet
       Caption = 'Armazém'
-      ClientHeight = 640
+      ClientHeight = 639
       ClientWidth = 1637
       object panelArmazem: TPanel
         Left = 0
@@ -4451,11 +4451,11 @@ object FormDispatcher: TFormDispatcher
     end
     object pnlRelogio: TPanel
       Left = 1440
-      Height = 57
+      Height = 58
       Top = 24
       Width = 144
       BevelOuter = bvNone
-      ClientHeight = 57
+      ClientHeight = 58
       ClientWidth = 144
       Color = clBlack
       ParentBackground = False
@@ -4463,7 +4463,7 @@ object FormDispatcher: TFormDispatcher
       TabOrder = 0
       object labelRelogio: TLabel
         Left = 0
-        Height = 57
+        Height = 58
         Top = 0
         Width = 144
         Align = alClient
@@ -4531,7 +4531,7 @@ object FormDispatcher: TFormDispatcher
     end
     object shpStatusPLC: TShape
       Left = 1232
-      Height = 57
+      Height = 58
       Top = 24
       Width = 184
       Brush.Color = clLime
@@ -4558,7 +4558,7 @@ object FormDispatcher: TFormDispatcher
   object Footer: TPanel
     Left = 0
     Height = 30
-    Top = 773
+    Top = 772
     Width = 1645
     Align = alBottom
     BevelOuter = bvNone
@@ -4578,7 +4578,7 @@ object FormDispatcher: TFormDispatcher
     TabOrder = 2
     object Shape1: TShape
       Left = 0
-      Height = 3
+      Height = 2
       Top = 0
       Width = 1645
       Align = alTop
