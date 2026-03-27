@@ -26,8 +26,6 @@ type
   TArray_Production_Order = array of TProduction_Order; // This array shall be completed by the SQL query
   //***************************************
 
-
-
   //***************************************
   // Dispatcher Execution
   // Enumerated: defines all stages of TTasks
@@ -75,7 +73,6 @@ type
    Inbound_free : Boolean;    // true (free) or false (busy)
   end;
   //***************************************
-
 
 
   { TFormDispatcher }
@@ -171,17 +168,6 @@ type
     procedure btnLimparClick(Sender: TObject);
     procedure btnPLCClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure GroupBox1Click(Sender: TObject);
-    procedure GroupBox2Click(Sender: TObject);
-    procedure GroupBox3Click(Sender: TObject);
-    procedure imgLogoClick(Sender: TObject);
-    procedure Label13Click(Sender: TObject);
-    procedure Label1Click(Sender: TObject);
-    procedure Label2Click(Sender: TObject);
-    procedure Label3Click(Sender: TObject);
-    procedure HeaderClick(Sender: TObject);
-    procedure TabSheet2ContextPopup(Sender: TObject; MousePos: TPoint;
-      var Handled: Boolean);
     procedure Timer1Timer(Sender: TObject);
   private
 
@@ -232,88 +218,21 @@ var
   // Status of each cell in the warehouse.
   WAREHOUSE_Parts           : array of integer;         //warehouse parts in each position
 
+
 implementation
 
 {$R *.lfm}
 
+//******************************************************************************
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//******************************************************************************
 
 
+//----------- CÓDIGO INATIVO - ALPENAS POR UMA QUESTÃO DE SEGURANÇA ------------
 
 
-{ Procedure that checks the status of the resources available on the shop floor }
-procedure UpdateResources(var shopfloor: TResources);
-var
-    resp : array[1..8] of integer;
-begin
-  {'FactoryIO state',
-   'Inbound state',
-   'Warehouse_state',
-   'Warehouse input conveyor part',
-   'Warehouse output conveyor part',
-   'Cell 1 part',
-   'Cell 2 part',
-   'Pick & Place part'
-   }
-  resp:=M_Get_Factory_Status();
-
-  with shopfloor do
-  begin
-    Inbound_free := Int(resp[2]) = 1;
-    AR_free      := Int(resp[3]) = 1;
-    AR_In_Part   := LongInt(resp[4]);
-    AR_Out_Part  := LongInt(resp[5]);
-    Robot_1_Part := LongInt(resp[6]);
-    Robot_2_Part := LongInt(resp[7]);
-  end;
-end;
-
-
-{ Procedure that received TArray_Production_Order and converts to TArray_Task
--> INPUT: TArray_Production_Order
--> OUTPUT: TArray_Task
-}
-procedure SimpleScheduler(var orders: TArray_Production_Order; var tasks:TArray_Task );
-var
-    current_task     : TTask;
-    idx_order        : integer;
-    numb_tasks_total : integer = 0;       // total number of tasks created in "tasks"
-    numb_same_task   : integer = 0;
-
-begin
-  for idx_order:= 0 to Length(orders)-1 do
-  begin
-      with current_task do
-      begin
-        numb_same_task    := 0;
-
-        task_type         := orders[idx_order].order_type;
-        part_type         := orders[idx_order].part_type;
-        current_operation := Stage_To_Be_Started;
-
-        part_position_AR  := -1;  // to be defined later.   STUDENTS MUST CHANGE
-
-        if( part_type < Part_Lid_Blue )then
-        begin
-             part_destination  := 1;     // if bases (Exit 1 or Cell 1)
-        end else
-        begin
-            part_destination  := 2;     // if bases (Exit 2 or Cell 2)
-        end;
-
-        //Create  orders[idx_order].part_numbers of the same TTask for Dispatcher.
-        numb_tasks_total :=  Length(tasks);
-        SetLength(tasks,  numb_tasks_total + orders[idx_order].part_numbers);
-        for numb_same_task := 0 to orders[idx_order].part_numbers-1 do
-        begin
-            tasks[numb_tasks_total+numb_same_task] := current_task;
-        end;
-      end;
-  end;
-
-end;
-
-
-
+//CÓDIGO NÃO UTILIZADO POIS O BOTÃO ESTÁ INATIVO - APENAS AQUI POR UMA QUESTÃO DE SEGURANÇA EM CASO DE BUG
+//HARD CODE
 
 // Query DB -> Scheduling -> Connect PLC for Dispatching
 procedure TFormDispatcher.BStartClick(Sender: TObject);
@@ -324,10 +243,7 @@ begin
   // ******************************************
   // Query to DB and converts data to structures
   // ...      to be completed by the STUDENT after SQL introduction in INFI.
-  // *******************************************
-
-
-
+  // *****************************************
   // ******************************************
   // Simulating the result of the SQL query:
   // CENÁRIO COMPLETO DO VÍDEO DA ENTREGA
@@ -375,11 +291,9 @@ begin
   production_order.part_numbers := 1;
   production_order.part_type    := Part_Raw_Grey;    // MP Cinzenta (3)
   Production_Orders[6]          := production_order;
-  // ******************************************
-
-
 
   // ******************************************
+
   // Simulating the result of the SQL query:
   (*SetLength(Production_Orders, 1);                   //Let's create only some Orders to use as an example. STUDENT MUST CHANGE ACCORDING TO REQUIREMENTS
 
@@ -411,10 +325,8 @@ begin
   Production_Orders[4]            := production_order;
   *)
   // ******************************************
-
   // for Scheduling
   idx_Task_Executing := 0;
-
   //Connecting to PLC
   result := M_connect();
 
@@ -427,8 +339,9 @@ begin
    end;
 end;
 
-//Botão Adicionar
 
+//BOTÃO NÃO É USADO - APENAS AQUI POR MOTIVOS DE SEGURANÇA EM CASO DE BUGS
+//Botão Adicionar
 {Botão antigo
 procedure TFormDispatcher.btnAddAprovClick(Sender: TObject);
 var
@@ -490,426 +403,9 @@ begin
   LogMsg('SISTEMA: Adicionado ao plano -> ' + tarefa + ' de ' + IntToStr(qtd) + 'x ' + peca);
 end; }
 
-//Botão Adicionar Inbound
-procedure TFormDispatcher.btnAddAprovClick(Sender: TObject);
-begin
-  // 1. Verifica se o utilizador escolheu a cor da matéria-prima
-  if cbCorAprov.ItemIndex = -1 then
-  begin
-    ShowMessage('Por favor, selecione a Cor da Matéria-Prima!');
-    Exit;
-  end;
 
-  // 2. Verifica se a quantidade faz sentido
-  if spnQtdAprov.Value <= 0 then
-  begin
-    ShowMessage('A quantidade tem de ser pelo menos 1!');
-    Exit;
-  end;
-
-  // 3. O Truque: O código força a palavra "Matéria" automaticamente!
-  lstPlano.Items.Add('Aprovisionamento | Matéria ' + cbCorAprov.Text + ' | ' + IntToStr(spnQtdAprov.Value));
-
-  // 4. Regista a ação no nosso Logger
-  LogMsg('SISTEMA: Adicionado plano -> Aprovisionamento de ' + IntToStr(spnQtdAprov.Value) + 'x Matéria ' + cbCorAprov.Text);
-end;
-
-//Botão Adicionar Expedição
-procedure TFormDispatcher.btnAddExpClick(Sender: TObject);
-begin
-  // 1. Verifica se o utilizador escolheu o produto e a cor
-  if (cbProdExp.ItemIndex = -1) or (cbCorExp.ItemIndex = -1) then
-  begin
-    ShowMessage('Por favor, selecione o Produto e a Cor a expedir!');
-    Exit;
-  end;
-
-  // 2. Verifica se a quantidade é válida
-  if spnQtdExp.Value <= 0 then
-  begin
-    ShowMessage('A quantidade tem de ser pelo menos 1!');
-    Exit;
-  end;
-
-  // 3. Junta tudo e envia para a ListBox no formato padrão
-  lstPlano.Items.Add('Expedição | ' + cbProdExp.Text + ' ' + cbCorExp.Text + ' | ' + IntToStr(spnQtdExp.Value));
-
-  // 4. Regista a ação no nosso Logger
-  LogMsg('SISTEMA: Adicionado plano -> Expedição de ' + IntToStr(spnQtdExp.Value) + 'x ' + cbProdExp.Text + ' ' + cbCorExp.Text);
-end;
-
-//Botão Adicionar Produção
-procedure TFormDispatcher.btnAddProdClick(Sender: TObject);
-begin
-  // 1. Verifica se o utilizador escolheu o produto e a cor
-  if (cbProdProd.ItemIndex = -1) or (cbCorProd.ItemIndex = -1) then
-  begin
-    ShowMessage('Por favor, selecione o Produto e a Cor a produzir!');
-    Exit;
-  end;
-
-  // 2. Verifica se a quantidade faz sentido
-  if spnQtdProd.Value <= 0 then
-  begin
-    ShowMessage('A quantidade tem de ser pelo menos 1!');
-    Exit;
-  end;
-
-  // 3. Junta tudo e envia para a ListBox no formato padrão
-  lstPlano.Items.Add('Produção | ' + cbProdProd.Text + ' ' + cbCorProd.Text + ' | ' + IntToStr(spnQtdProd.Value));
-
-  // 4. Regista a ação no nosso Logger
-  LogMsg('SISTEMA: Adicionado plano -> Produção de ' + IntToStr(spnQtdProd.Value) + 'x ' + cbProdProd.Text + ' ' + cbCorProd.Text);
-end;
-
-
-
-
-//Botão Executar
-
-procedure TFormDispatcher.btnExecutarClick(Sender: TObject);
-var
-  i: integer;
-  linha, tarefaStr, pecaStr, qtdStr: string;
-  pos1, pos2: integer;
-  ordem: TProduction_Order;
-begin
-  // --- FASE 1: Verificações de Segurança ---
-  if lstPlano.Items.Count = 0 then
-  begin
-    ShowMessage('Aviso: O plano está vazio! Adicione tarefas primeiro.');
-    Exit;
-  end;
-
-  // Garante que o Autómato está ligado antes de enviarmos comandos
-  if M_Connection_Status() <= 0 then
-  begin
-    ShowMessage('Erro Crítico: O PLC não está conectado! Clique em "CONECTAR PLC" primeiro.');
-    Exit;
-  end;
-
-  // --- FASE 2: Preparar o Array Principal ---
-  SetLength(Production_Orders, lstPlano.Items.Count);
-
-  // --- FASE 3: Ler e Traduzir Linha a Linha ---
-  for i := 0 to lstPlano.Items.Count - 1 do
-  begin
-    linha := lstPlano.Items[i]; // Exemplo que estamos a ler: "Produção | Tampa Verde | 2"
-
-    // Cortar a string para extrair a Tarefa
-    pos1 := Pos(' | ', linha);
-    tarefaStr := Copy(linha, 1, pos1 - 1);
-    linha := Copy(linha, pos1 + 3, Length(linha)); // O que sobra: "Tampa Verde | 2"
-
-    // Cortar a string para extrair a Peça e a Quantidade
-    pos2 := Pos(' | ', linha);
-    pecaStr := Copy(linha, 1, pos2 - 1);
-    qtdStr := Copy(linha, pos2 + 3, Length(linha));
-
-    // --- TRADUÇÃO DAS TAREFAS ---
-    if tarefaStr = 'Aprovisionamento' then ordem.order_type := Type_Delivery
-    else if tarefaStr = 'Produção' then ordem.order_type := Type_Production
-    else if tarefaStr = 'Expedição' then ordem.order_type := Type_Expedition;
-
-    // --- TRADUÇÃO DAS PEÇAS ---
-    if pecaStr = 'Matéria Azul' then ordem.part_type := Part_Raw_Blue
-    else if pecaStr = 'Matéria Verde' then ordem.part_type := Part_Raw_Green
-    else if pecaStr = 'Matéria Cinza' then ordem.part_type := Part_Raw_Grey
-    else if pecaStr = 'Base Azul' then ordem.part_type := Part_Base_Blue
-    else if pecaStr = 'Base Verde' then ordem.part_type := Part_Base_Green
-    else if pecaStr = 'Base Cinza' then ordem.part_type := Part_Base_Grey
-    else if pecaStr = 'Tampa Azul' then ordem.part_type := Part_Lid_Blue
-    else if pecaStr = 'Tampa Verde' then ordem.part_type := Part_Lid_Green
-    else if pecaStr = 'Tampa Cinza' then ordem.part_type := Part_Lid_Grey;
-
-    // --- TRADUÇÃO DA QUANTIDADE ---
-    ordem.part_numbers := StrToInt(qtdStr);
-
-    // Guardar esta ordem devidamente traduzida no nosso array global
-    Production_Orders[i] := ordem;
-  end;
-
-  // --- FASE 4: Iniciar o Processo Fabril ---
-  LogMsg('SISTEMA: A converter ' + IntToStr(lstPlano.Items.Count) + ' linha(s) para tarefas de máquina...');
-
-  // Reiniciamos o índice de execução (crucial se fores executar vários planos seguidos)
-  idx_Task_Executing := 0;
-
-  // Usamos a função do professor para transformar estas ordens nas "Stages" da máquina de estados
-  SimpleScheduler(Production_Orders, ShopTasks);
-
-  // Ligar o "motor" (se não estivesse já ligado)
-  Timer1.Enabled := true;
-
-  LogMsg('SISTEMA: Execução do plano iniciada!');
-end;
-
-procedure TFormDispatcher.btnExtrairRelatorioClick(Sender: TObject);
-var
-  NomeFicheiro: string;
-begin
-  // 1. Verificar se há realmente algo para guardar
-  if memLogger.Lines.Count = 0 then
-  begin
-    ShowMessage('Aviso: O Logger está vazio. Não há nada para extrair!');
-    Exit;
-  end;
-
-  // 2. Criar um nome de ficheiro único com a data e hora atual
-  // Exemplo de como vai ficar: "Relatorio_HS_Systems_20260326_184530.txt"
-  NomeFicheiro := 'Relatorio_HS_Systems_' + FormatDateTime('yyyymmdd_hhnnss', Now) + '.txt';
-
-  try
-    // 3. A magia do Lazarus: Guardar tudo num ficheiro com 1 linha de código!
-    memLogger.Lines.SaveToFile(NomeFicheiro);
-
-    // 4. Avisar o utilizador (no próprio log e com um pop-up)
-    LogMsg('SISTEMA: Relatório extraído com sucesso para o ficheiro -> ' + NomeFicheiro);
-    ShowMessage('Sucesso! Relatório guardado na pasta do teu projeto como: ' + sLineBreak + NomeFicheiro);
-  except
-    // Caso o Windows bloqueie a gravação por falta de permissões
-    ShowMessage('Erro: Não foi possível guardar o ficheiro. Verifique as permissões da pasta.');
-  end;
-end;
-
-
-//BOTÃO INICIALIZAR ARMAZEM
-procedure TFormDispatcher.btnInicializarArmazemClick(Sender: TObject);
-var
-  TotalPecas, posIndex, cel, i, r: integer;
-  InitPositions: array[1..6] of integer;
-
-  // Vamos criar um procedimento local dentro deste botão para facilitar a inserção
-  procedure InserirPeca(CodigoPeca, Quantidade: integer);
-  var
-    j: integer;
-  begin
-    for j := 1 to Quantidade do
-    begin
-      // Envia o comando para a posição válida atual
-      r := M_Initialize(InitPositions[posIndex], CodigoPeca);
-
-      // Regista na nossa matriz mental
-      WAREHOUSE_Parts[InitPositions[posIndex]] := CodigoPeca;
-
-      Inc(posIndex); // Avança para a próxima posição livre na 1ª coluna
-      Sleep(1500);   // Dá tempo ao Factory I/O para processar
-    end;
-  end;
-
-begin
-  // 1. Definir as posições obrigatórias da 1ª coluna
-  InitPositions[1] := 1;
-  InitPositions[2] := 10;
-  InitPositions[3] := 19;
-  InitPositions[4] := 28;
-  InitPositions[5] := 37;
-  InitPositions[6] := 46;
-
-  // 2. Calcular o total de peças pedidas na Interface
-  TotalPecas := spnMatAzul.Value + spnMatVerde.Value + spnMatCinza.Value +
-                spnBaseAzul.Value + spnBaseVerde.Value + spnBaseCinza.Value +
-                spnTampaAzul.Value + spnTampaVerde.Value + spnTampaCinza.Value;
-
-  // 3. Verificação de Segurança
-  if TotalPecas > 6 then
-  begin
-    ShowMessage('Erro: Só pode inicializar um máximo de 6 peças (limite da 1ª coluna do armazém). Reduza os valores!');
-    Exit; // Cancela a execução imediatamente
-  end;
-
-  if TotalPecas = 0 then
-  begin
-    ShowMessage('Aviso: Nenhuma peça selecionada para inicializar.');
-    Exit;
-  end;
-
-  // 4. Preparar o Armazém (Limpar matriz anterior)
-  SetLength(WAREHOUSE_Parts, 55);
-  for cel := 1 to Length(WAREHOUSE_Parts)-1 do
-  begin
-      WAREHOUSE_Parts[cel] := 0;
-  end;
-
-  LogMsg('SISTEMA: A inicializar ' + IntToStr(TotalPecas) + ' peça(s) no armazém...');
-
-  posIndex := 1; // Aponta para o primeiro espaço válido (InitPositions[1] que é a célula 1)
-
-  // 5. Inserir as peças de acordo com os valores da Interface
-  // A função InserirPeca vai usar os códigos corretos das peças
-  InserirPeca(Part_Raw_Blue, spnMatAzul.Value);     // Código 1
-  InserirPeca(Part_Raw_Green, spnMatVerde.Value);   // Código 2
-  InserirPeca(Part_Raw_Grey, spnMatCinza.Value);    // Código 3
-  InserirPeca(Part_Base_Blue, spnBaseAzul.Value);   // Código 4
-  InserirPeca(Part_Base_Green, spnBaseVerde.Value); // Código 5
-  InserirPeca(Part_Base_Grey, spnBaseCinza.Value);  // Código 6
-  InserirPeca(Part_Lid_Blue, spnTampaAzul.Value);   // Código 7
-  InserirPeca(Part_Lid_Green, spnTampaVerde.Value); // Código 8
-  InserirPeca(Part_Lid_Grey, spnTampaCinza.Value);  // Código 9
-
-  LogMsg('SISTEMA: Inicialização do armazém concluída!');
-
-  btnInicializarArmazem.Enabled := False;
-  LogMsg('SISTEMA: Botão de inicialização bloqueado por segurança.');
-
-end;
-
-//Botão Limpar
-
-procedure TFormDispatcher.btnLimparClick(Sender: TObject);
-var
-  IndexSelecionado: integer;
-begin
-  // 1. Descobrir qual é a linha que o utilizador selecionou na ListBox
-  IndexSelecionado := lstPlano.ItemIndex;
-
-  // 2. Verificar se há realmente algo selecionado (-1 significa que não há nada clicado)
-  if IndexSelecionado = -1 then
-  begin
-    // Nuance: Se a lista estiver totalmente vazia, damos um aviso diferente
-    if lstPlano.Items.Count = 0 then
-      ShowMessage('O plano já está vazio. Não há registos para limpar!')
-    else
-      ShowMessage('Atenção: Por favor, clique no registo que deseja apagar antes de carregar em Limpar.');
-
-    Exit; // Sai do procedimento para não tentar apagar o vazio (o que daria erro fatal no programa)
-  end;
-
-  // 3. Nuance: Registar no log da fábrica o que estamos a remover antes de o apagar de vez
-  LogMsg('SISTEMA: Registo removido do plano -> ' + lstPlano.Items[IndexSelecionado]);
-
-  // 4. Apagar efetivamente a linha selecionada da ListBox
-  lstPlano.Items.Delete(IndexSelecionado);
-end;
-
-procedure TFormDispatcher.btnPLCClick(Sender: TObject);
-var
-  result: integer;
-begin
-  if btnPLC.Caption = 'CONECTAR PLC' then
-  begin
-    // Tenta estabelecer a ligação com o autómato
-    result := M_connect(); //
-
-    if (result = 1) then // Se a ligação for bem sucedida (valor > 0)
-    begin
-      btnPLC.Caption := 'DESCONECTAR';
-      shpStatusPLC.Brush.Color := clRed; // Muda para Vermelho (Ligado)
-      LogMsg('SISTEMA: Conectado ao PLC com sucesso.');
-
-      //Desbloqueia Botões
-      btnInicializarArmazem.Enabled := True;
-      btnAddAprov.Enabled := True;
-      btnAddProd.Enabled := True;
-      btnAddExp.Enabled := True;
-      btnLimpar.Enabled := True;
-      btnExecutar.Enabled := True;
-
-    end
-    else
-    begin
-      ShowMessage('Erro: Não foi possível conectar ao PLC. Verifica o programa do autómato!'); //
-    end;
-  end
-  else
-  begin
-    // Lógica para desligar
-    result := M_Disconnect(); // Encerra a conexão com o autómato
-
-    btnPLC.Caption := 'CONECTAR PLC';
-    shpStatusPLC.Brush.Color := clLime; // Muda para Verde (Desligado)
-    LogMsg('SISTEMA: Desconectado do PLC.');
-
-    //Bloqueia Botoes
-    btnInicializarArmazem.Enabled := False;
-    btnAddAprov.Enabled := False;
-    btnAddProd.Enabled := False;
-    btnAddExp.Enabled := False;
-    btnLimpar.Enabled := False;
-    btnExecutar.Enabled := False;
-
-    // --- NOVIDADE: Colocar as caixas a zero ao desconectar ---
-    spnMatAzul.Value := 0;
-    spnMatVerde.Value := 0;
-    spnMatCinza.Value := 0;
-    spnBaseAzul.Value := 0;
-    spnBaseVerde.Value := 0;
-    spnBaseCinza.Value := 0;
-    spnTampaAzul.Value := 0;
-    spnTampaVerde.Value := 0;
-    spnTampaCinza.Value := 0;
-
-    LogMsg('SISTEMA: Valores de Stock Inicial repostos a zero.');
-
-  end;
-end;
-
-procedure TFormDispatcher.FormCreate(Sender: TObject);
-begin
-  SetLength(ShopTasks, 0);
-  idx_Task_Executing := 0;
-end;
-
-procedure TFormDispatcher.GroupBox1Click(Sender: TObject);
-begin
-
-end;
-
-procedure TFormDispatcher.GroupBox2Click(Sender: TObject);
-begin
-
-end;
-
-procedure TFormDispatcher.GroupBox3Click(Sender: TObject);
-begin
-
-end;
-
-procedure TFormDispatcher.imgLogoClick(Sender: TObject);
-begin
-
-end;
-
-procedure TFormDispatcher.Label13Click(Sender: TObject);
-begin
-
-end;
-
-
-procedure TFormDispatcher.Label1Click(Sender: TObject);
-begin
-
-end;
-
-procedure TFormDispatcher.Label2Click(Sender: TObject);
-begin
-
-end;
-
-procedure TFormDispatcher.Label3Click(Sender: TObject);
-begin
-
-end;
-
-procedure TFormDispatcher.HeaderClick(Sender: TObject);
-begin
-
-end;
-
-
-procedure TFormDispatcher.TabSheet2ContextPopup(Sender: TObject;
-  MousePos: TPoint; var Handled: Boolean);
-begin
-
-end;
-
-procedure TFormDispatcher.Timer1Timer(Sender: TObject);
-begin
-  BExecuteClick(Self);
-  labelRelogio.Caption := FormatDateTime('hh:nn:ss', Now);
-end;
-
-
+//CÓDIGO NÃO É USADO POIS O BOTÃO FOI DESATIVADO, SERVE APENAS NO CASO DE HAVER ALGUM BUG
+//HARD CODE
 
 
 //Initialization of the MES /week. This procedure run only once per week
@@ -947,13 +443,109 @@ begin
 
 
   //Converts ProductionOrders to Tasks (staged activities)
-  SimpleScheduler(Production_Orders, ShopTasks);
+  //SimpleScheduler(Production_Orders, ShopTasks); NÃO DEVIA ESTAR COMENTADO MAS DEU ERRO TALVEZ POR ESTAR ANTES DA PROCEDURE
 
 
   // Starting Dispatcher Iterations over time
   Timer1.Enabled:= true;
 end;
 
+
+//--------------------------- FIM DO CÓDIGO INATIVO ----------------------------
+
+
+//******************************************************************************
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//******************************************************************************
+
+
+//---------------------- PROCEDURES PRÉ-FEITAS PROFESSOR -----------------------
+
+
+{ Procedure that checks the status of the resources available on the shop floor }
+procedure UpdateResources(var shopfloor: TResources);
+var
+    resp : array[1..8] of integer;
+begin
+  {'FactoryIO state',
+   'Inbound state',
+   'Warehouse_state',
+   'Warehouse input conveyor part',
+   'Warehouse output conveyor part',
+   'Cell 1 part',
+   'Cell 2 part',
+   'Pick & Place part'
+   }
+  resp:=M_Get_Factory_Status();
+
+  with shopfloor do
+  begin
+    Inbound_free := Int(resp[2]) = 1;
+    AR_free      := Int(resp[3]) = 1;
+    AR_In_Part   := LongInt(resp[4]);
+    AR_Out_Part  := LongInt(resp[5]);
+    Robot_1_Part := LongInt(resp[6]);
+    Robot_2_Part := LongInt(resp[7]);
+  end;
+end;
+
+
+{ Procedure that received TArray_Production_Order and converts to TArray_Task
+-> INPUT: TArray_Production_Order
+-> OUTPUT: TArray_Task
+}
+procedure SimpleScheduler(var orders: TArray_Production_Order; var tasks:TArray_Task );
+var
+    current_task     : TTask;
+    idx_order        : integer;
+    numb_tasks_total : integer = 0;       // total number of tasks created in "tasks"
+    numb_same_task   : integer = 0;
+
+begin
+  for idx_order:= 0 to Length(orders)-1 do
+  begin
+      with current_task do
+      begin
+        numb_same_task    := 0;
+
+        task_type         := orders[idx_order].order_type;
+        part_type         := orders[idx_order].part_type;
+        current_operation := Stage_To_Be_Started;
+
+        part_position_AR  := -1;  // to be defined later.   STUDENTS MUST CHANGE
+
+        if( part_type < Part_Lid_Blue )then
+        begin
+             part_destination  := 1;     // if bases (Exit 1 or Cell 1)
+        end else
+        begin
+            part_destination  := 2;     // if bases (Exit 2 or Cell 2)
+        end;
+        //Create  orders[idx_order].part_numbers of the same TTask for Dispatcher.
+        numb_tasks_total :=  Length(tasks);
+        SetLength(tasks,  numb_tasks_total + orders[idx_order].part_numbers);
+        for numb_same_task := 0 to orders[idx_order].part_numbers-1 do
+        begin
+            tasks[numb_tasks_total+numb_same_task] := current_task;
+        end;
+      end;
+  end;
+
+end;
+
+
+procedure TFormDispatcher.FormCreate(Sender: TObject);
+begin
+  SetLength(ShopTasks, 0);
+  idx_Task_Executing := 0;
+end;
+
+
+procedure TFormDispatcher.Timer1Timer(Sender: TObject);
+begin
+  BExecuteClick(Self);
+  labelRelogio.Caption := FormatDateTime('hh:nn:ss', Now);
+end;
 
 
 // get the first position (cell) in AR that contains the "Part"
@@ -971,6 +563,7 @@ begin
   end;
 end;
 
+
 //Sets the Position of the AR with the "Part" provided
 procedure TFormDispatcher.SET_AR_Position (idx : integer; Part : integer; var Warehouse : array of integer);
 begin
@@ -978,20 +571,26 @@ begin
 end;
 
 
-
-
 procedure TFormDispatcher.BExecuteClick(Sender: TObject);
 begin
   // See the availability of resources
   UpdateResources(ShopResources);
-
-
   //Dispatcher executing per cycle.
   if(Length(ShopTasks)>0) then begin
     Dispatcher(ShopTasks, idx_Task_Executing, ShopResources);
   end;
 end;
 
+
+//-------------------- FIM PROCEDURES PRÉ-FEITAS PROFESSOR ---------------------
+
+
+//******************************************************************************
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//******************************************************************************
+
+
+//---------------------- CÓDIGO INTERNO - ALTERADO/FEITO -----------------------
 
 
 // Global Dispatcher - SIMPLEX
@@ -1052,184 +651,6 @@ begin
       end;
 
     end;
-end;
-
-
-// Procedure that executes an expedition order according to SLIDE 19 of T classes.
-procedure TFormDispatcher.Execute_Expedition_Order(var task:TTask; shopfloor: TResources );
-var
-    r : integer;
-begin
-  //  TStage      = (Stage_To_Be_Started = 1, Stage_GetPart, Stage_Unload, Stage_To_AR_Out, Stage_Clear_Pos_AR, Stage_Finished);   //TbC
-
-  with task do
-  begin
-     case current_operation of
-
-        // To be Started
-        Stage_To_Be_Started:
-        begin
-           current_operation :=  Stage_GetPart;
-        end;
-
-        // Getting a Position from the Warehouse
-        Stage_GetPart :
-        begin
-          if(shopfloor.AR_free) then  //AR is free
-          begin
-            Part_Position_AR := GET_AR_Position(Part_Type, WAREHOUSE_Parts);
-            LogMsg(IntToStr(Part_Position_AR));
-
-            if( Part_Position_AR > 0 ) then
-            begin
-               current_operation :=  Stage_Unload;
-            end
-            else
-            begin
-               current_operation :=  Stage_GetPart;
-            end;
-          end;
-        end;
-
-        // Request to unload that part
-        Stage_Unload :
-        begin
-          LogMsg('AR Unloading: ' + IntToStr(Part_Position_AR));
-          r := M_Unload(Part_Position_AR);
-
-          if ( r = 1 ) then                                 //sucess
-             current_operation :=  Stage_To_AR_Out;
-        end;
-
-        // Part is in the output conveyor
-        Stage_To_AR_Out :
-        begin
-          if( ShopResources.AR_Out_Part  = Part_Type ) then
-          begin
-            r := M_Do_Expedition(Part_Destination);          // Expedition
-
-            if( r = 1) then                                  // sucess
-             current_operation :=  Stage_Clear_Pos_AR;
-          end;
-        end;
-
-        //Updated AR (removing the part from the position)
-        Stage_Clear_Pos_AR :
-        begin
-          SET_AR_Position(Part_Position_AR, 0, WAREHOUSE_Parts);
-          current_operation :=  Stage_Finished;
-        end;
-
-        //Done.
-        Stage_Finished :
-        begin
-          current_operation :=  Stage_Finished;
-        end;
-      end;
-  end;
-end;
-
-// Procedimento que executa uma ordem de Aprovisionamento (Inbound / Delivery)
-procedure TFormDispatcher.Execute_Delivery_Order(var task:TTask; shopfloor: TResources );
-var
-    r : integer; // Variável para guardar a resposta do Autómato (1 para sucesso, < 0 para erro)
-begin
-  with task do // O "with" facilita o acesso às variáveis da "task" atual (ex: part_type)
-  begin
-     case current_operation of // Avalia em que fase a máquina de estados está
-
-        // --- FASE 1: Iniciar a Tarefa ---
-        Stage_To_Be_Started:
-        begin
-           LogMsg('INBOUND: A iniciar a receção da peça tipo ' + IntToStr(part_type));
-           // Passa imediatamente para a próxima fase, onde vamos enviar o comando ao Factory IO
-           current_operation := Stage_Req_Inbound;
-        end;
-
-        // --- FASE 2: Pedir a Matéria-Prima ao Inbound ---
-        Stage_Req_Inbound:
-        begin
-          // Só podemos pedir peças se o equipamento de Inbound não estiver ocupado com outro comando
-          if (shopfloor.Inbound_free) then
-          begin
-            // M_Do_Inbound recebe uma matéria-prima vinda do exterior da fábrica
-            r := M_Do_Inbound(part_type);
-
-            // Se o comando foi aceite corretamente (retornou 1)
-            if (r = 1) then
-            begin
-               LogMsg('INBOUND: Comando aceite. A aguardar chegada da peça...');
-               // Avança para a fase de espera (o tapete vai rolar até a peça chegar ao armazém)
-               current_operation := Stage_Wait_Inbound_Tapete;
-            end;
-          end;
-        end;
-
-        // --- FASE 3: Esperar que a peça chegue ao Tapete de Entrada do Armazém ---
-        Stage_Wait_Inbound_Tapete:
-        begin
-          // A matéria-prima depois de recebida é encaminhada automaticamente para o tapete de entrada do armazém.
-          // Aqui verificamos ciclicamente se o sensor do tapete de entrada já detetou a nossa peça.
-          if (shopfloor.AR_In_Part = part_type) then
-          begin
-            LogMsg('INBOUND: Peça chegou ao tapete do armazém. A procurar espaço livre...');
-            // A peça chegou fisicamente! Agora vamos procurar um lugar para a guardar
-            current_operation := Stage_Find_Free_AR;
-          end;
-        end;
-
-        // --- FASE 4: Encontrar uma posição livre na nossa matriz mental ---
-        Stage_Find_Free_AR:
-        begin
-          // Aproveitamos a função do professor "GET_AR_Position".
-          // Ao pedir a peça "0", a função vai procurar a primeira célula vazia (com valor 0) no WAREHOUSE_Parts.
-          part_position_AR := GET_AR_Position(0, WAREHOUSE_Parts);
-
-          // Como as posições do armazém vão de 1 a 54, se for > 0 significa que encontrou espaço.
-          if (part_position_AR > 0) then
-          begin
-             LogMsg('INBOUND: Encontrada posição livre -> ' + IntToStr(part_position_AR));
-             // Já temos um alvo. Vamos dar ordem ao braço do armazém para ir buscar a peça.
-             current_operation := Stage_Load_AR;
-          end
-          else
-          begin
-             // Se part_position_AR for 0, o armazém está totalmente cheio.
-             LogMsg('ERRO INBOUND: Armazém cheio! Não é possível guardar a peça.');
-             // Por agora, o código fica bloqueado nesta fase até que se liberte espaço.
-          end;
-        end;
-
-        // --- FASE 5: Carregar a peça para o Armazém ---
-        Stage_Load_AR:
-        begin
-          // O Armazém só executa 1 comando de cada vez. Temos de garantir que está livre.
-          if (shopfloor.AR_free) then
-          begin
-            // O comando M_Load carrega a peça do tapete de entrada e coloca-a na posição definida.
-            r := M_Load(part_position_AR);
-
-            // Se o comando foi executado corretamente (retornou 1)
-            if (r = 1) then
-            begin
-               LogMsg('INBOUND: Peça guardada na posição ' + IntToStr(part_position_AR));
-               // Guardamos a informação de que a posição deixou de estar livre e tem a nova peça
-               SET_AR_Position(part_position_AR, part_type, WAREHOUSE_Parts);
-               // A ordem de Aprovisionamento está oficialmente concluída!
-               current_operation := Stage_Finished;
-            end;
-          end;
-        end;
-
-        // --- FASE 6: Tarefa Terminada ---
-        Stage_Finished:
-        begin
-          // Não precisamos de colocar código aqui.
-          // O procedimento "Dispatcher" principal vai ver que o estado é Stage_Finished e passa para a próxima task.
-        end;
-
-      end; // Fim do case
-  end; // Fim do with
 end;
 
 
@@ -1370,6 +791,186 @@ begin
   end; // fim do with task
 end;
 
+
+// Procedimento da Expedição - código do professor mas fazia sentido estar aqui
+procedure TFormDispatcher.Execute_Expedition_Order(var task:TTask; shopfloor: TResources );
+var
+    r : integer;
+begin
+  //  TStage      = (Stage_To_Be_Started = 1, Stage_GetPart, Stage_Unload, Stage_To_AR_Out, Stage_Clear_Pos_AR, Stage_Finished);   //TbC
+
+  with task do
+  begin
+     case current_operation of
+
+        // To be Started
+        Stage_To_Be_Started:
+        begin
+           current_operation :=  Stage_GetPart;
+        end;
+
+        // Getting a Position from the Warehouse
+        Stage_GetPart :
+        begin
+          if(shopfloor.AR_free) then  //AR is free
+          begin
+            Part_Position_AR := GET_AR_Position(Part_Type, WAREHOUSE_Parts);
+            LogMsg(IntToStr(Part_Position_AR));
+
+            if( Part_Position_AR > 0 ) then
+            begin
+               current_operation :=  Stage_Unload;
+            end
+            else
+            begin
+               current_operation :=  Stage_GetPart;
+            end;
+          end;
+        end;
+
+        // Request to unload that part
+        Stage_Unload :
+        begin
+          LogMsg('AR Unloading: ' + IntToStr(Part_Position_AR));
+          r := M_Unload(Part_Position_AR);
+
+          if ( r = 1 ) then                                 //sucess
+             current_operation :=  Stage_To_AR_Out;
+        end;
+
+        // Part is in the output conveyor
+        Stage_To_AR_Out :
+        begin
+          if( ShopResources.AR_Out_Part  = Part_Type ) then
+          begin
+            r := M_Do_Expedition(Part_Destination);          // Expedition
+
+            if( r = 1) then                                  // sucess
+             current_operation :=  Stage_Clear_Pos_AR;
+          end;
+        end;
+
+        //Updated AR (removing the part from the position)
+        Stage_Clear_Pos_AR :
+        begin
+          SET_AR_Position(Part_Position_AR, 0, WAREHOUSE_Parts);
+          current_operation :=  Stage_Finished;
+        end;
+
+        //Done.
+        Stage_Finished :
+        begin
+          current_operation :=  Stage_Finished;
+        end;
+      end;
+  end;
+end;
+
+
+// Procedimento que executa uma ordem de Aprovisionamento (Inbound / Delivery)
+procedure TFormDispatcher.Execute_Delivery_Order(var task:TTask; shopfloor: TResources );
+var
+    r : integer; // Variável para guardar a resposta do Autómato (1 para sucesso, < 0 para erro)
+begin
+  with task do // O "with" facilita o acesso às variáveis da "task" atual (ex: part_type)
+  begin
+     case current_operation of // Avalia em que fase a máquina de estados está
+
+        // --- FASE 1: Iniciar a Tarefa ---
+        Stage_To_Be_Started:
+        begin
+           LogMsg('INBOUND: A iniciar a receção da peça tipo ' + IntToStr(part_type));
+           // Passa imediatamente para a próxima fase, onde vamos enviar o comando ao Factory IO
+           current_operation := Stage_Req_Inbound;
+        end;
+
+        // --- FASE 2: Pedir a Matéria-Prima ao Inbound ---
+        Stage_Req_Inbound:
+        begin
+          // Só podemos pedir peças se o equipamento de Inbound não estiver ocupado com outro comando
+          if (shopfloor.Inbound_free) then
+          begin
+            // M_Do_Inbound recebe uma matéria-prima vinda do exterior da fábrica
+            r := M_Do_Inbound(part_type);
+
+            // Se o comando foi aceite corretamente (retornou 1)
+            if (r = 1) then
+            begin
+               LogMsg('INBOUND: Comando aceite. A aguardar chegada da peça...');
+               // Avança para a fase de espera (o tapete vai rolar até a peça chegar ao armazém)
+               current_operation := Stage_Wait_Inbound_Tapete;
+            end;
+          end;
+        end;
+
+        // --- FASE 3: Esperar que a peça chegue ao Tapete de Entrada do Armazém ---
+        Stage_Wait_Inbound_Tapete:
+        begin
+          // A matéria-prima depois de recebida é encaminhada automaticamente para o tapete de entrada do armazém.
+          // Aqui verificamos ciclicamente se o sensor do tapete de entrada já detetou a nossa peça.
+          if (shopfloor.AR_In_Part = part_type) then
+          begin
+            LogMsg('INBOUND: Peça chegou ao tapete do armazém. A procurar espaço livre...');
+            // A peça chegou fisicamente! Agora vamos procurar um lugar para a guardar
+            current_operation := Stage_Find_Free_AR;
+          end;
+        end;
+
+        // --- FASE 4: Encontrar uma posição livre na nossa matriz mental ---
+        Stage_Find_Free_AR:
+        begin
+          // Aproveitamos a função do professor "GET_AR_Position".
+          // Ao pedir a peça "0", a função vai procurar a primeira célula vazia (com valor 0) no WAREHOUSE_Parts.
+          part_position_AR := GET_AR_Position(0, WAREHOUSE_Parts);
+
+          // Como as posições do armazém vão de 1 a 54, se for > 0 significa que encontrou espaço.
+          if (part_position_AR > 0) then
+          begin
+             LogMsg('INBOUND: Encontrada posição livre -> ' + IntToStr(part_position_AR));
+             // Já temos um alvo. Vamos dar ordem ao braço do armazém para ir buscar a peça.
+             current_operation := Stage_Load_AR;
+          end
+          else
+          begin
+             // Se part_position_AR for 0, o armazém está totalmente cheio.
+             LogMsg('ERRO INBOUND: Armazém cheio! Não é possível guardar a peça.');
+             // Por agora, o código fica bloqueado nesta fase até que se liberte espaço.
+          end;
+        end;
+
+        // --- FASE 5: Carregar a peça para o Armazém ---
+        Stage_Load_AR:
+        begin
+          // O Armazém só executa 1 comando de cada vez. Temos de garantir que está livre.
+          if (shopfloor.AR_free) then
+          begin
+            // O comando M_Load carrega a peça do tapete de entrada e coloca-a na posição definida.
+            r := M_Load(part_position_AR);
+
+            // Se o comando foi executado corretamente (retornou 1)
+            if (r = 1) then
+            begin
+               LogMsg('INBOUND: Peça guardada na posição ' + IntToStr(part_position_AR));
+               // Guardamos a informação de que a posição deixou de estar livre e tem a nova peça
+               SET_AR_Position(part_position_AR, part_type, WAREHOUSE_Parts);
+               // A ordem de Aprovisionamento está oficialmente concluída!
+               current_operation := Stage_Finished;
+            end;
+          end;
+        end;
+
+        // --- FASE 6: Tarefa Terminada ---
+        Stage_Finished:
+        begin
+          // Não precisamos de colocar código aqui.
+          // O procedimento "Dispatcher" principal vai ver que o estado é Stage_Finished e passa para a próxima task.
+        end;
+
+      end; // Fim do case
+  end; // Fim do with
+end;
+
+
 // Função centralizada para escrever no Logger com a hora exata
 procedure TFormDispatcher.LogMsg(Texto: string);
 begin
@@ -1377,6 +978,387 @@ begin
   memLogger.Append(FormatDateTime('[hh:nn:ss] ', Now) + Texto);
 end;
 
+
+//----------------------------- Fim código interno -----------------------------
+
+
+//******************************************************************************
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//******************************************************************************
+
+
+//------------------------------- CÓDIGO BOTÕES --------------------------------
+
+
+// Botão PLC Conexão
+procedure TFormDispatcher.btnPLCClick(Sender: TObject);
+var
+  result: integer;
+begin
+  if btnPLC.Caption = 'CONECTAR PLC' then
+  begin
+    // Tenta estabelecer a ligação com o autómato
+    result := M_connect(); //
+
+    if (result = 1) then // Se a ligação for bem sucedida (valor > 0)
+    begin
+      btnPLC.Caption := 'DESCONECTAR';
+      shpStatusPLC.Brush.Color := clRed; // Muda para Vermelho (Ligado)
+      LogMsg('SISTEMA: Conectado ao PLC com sucesso.');
+
+      //Desbloqueia Botões
+      btnInicializarArmazem.Enabled := True;
+      btnAddAprov.Enabled := True;
+      btnAddProd.Enabled := True;
+      btnAddExp.Enabled := True;
+      btnLimpar.Enabled := True;
+      btnExecutar.Enabled := True;
+
+    end
+    else
+    begin
+      ShowMessage('Erro: Não foi possível conectar ao PLC. Verifica o programa do autómato!'); //
+    end;
+  end
+  else
+  begin
+    // Lógica para desligar
+    result := M_Disconnect(); // Encerra a conexão com o autómato
+
+    btnPLC.Caption := 'CONECTAR PLC';
+    shpStatusPLC.Brush.Color := clLime; // Muda para Verde (Desligado)
+    LogMsg('SISTEMA: Desconectado do PLC.');
+
+    //Bloqueia Botoes
+    btnInicializarArmazem.Enabled := False;
+    btnAddAprov.Enabled := False;
+    btnAddProd.Enabled := False;
+    btnAddExp.Enabled := False;
+    btnLimpar.Enabled := False;
+    btnExecutar.Enabled := False;
+
+    // --- NOVIDADE: Colocar as caixas a zero ao desconectar ---
+    spnMatAzul.Value := 0;
+    spnMatVerde.Value := 0;
+    spnMatCinza.Value := 0;
+    spnBaseAzul.Value := 0;
+    spnBaseVerde.Value := 0;
+    spnBaseCinza.Value := 0;
+    spnTampaAzul.Value := 0;
+    spnTampaVerde.Value := 0;
+    spnTampaCinza.Value := 0;
+
+    LogMsg('SISTEMA: Valores de Stock Inicial repostos a zero.');
+
+  end;
+end;
+
+
+//BOTÃO INICIALIZAR ARMAZEM
+procedure TFormDispatcher.btnInicializarArmazemClick(Sender: TObject);
+var
+  TotalPecas, posIndex, cel, i, r: integer;
+  InitPositions: array[1..6] of integer;
+
+  // Vamos criar um procedimento local dentro deste botão para facilitar a inserção
+  procedure InserirPeca(CodigoPeca, Quantidade: integer);
+  var
+    j: integer;
+  begin
+    for j := 1 to Quantidade do
+    begin
+      // Envia o comando para a posição válida atual
+      r := M_Initialize(InitPositions[posIndex], CodigoPeca);
+
+      // Regista na nossa matriz mental
+      WAREHOUSE_Parts[InitPositions[posIndex]] := CodigoPeca;
+
+      Inc(posIndex); // Avança para a próxima posição livre na 1ª coluna
+      Sleep(1500);   // Dá tempo ao Factory I/O para processar
+    end;
+  end;
+
+begin
+  // 1. Definir as posições obrigatórias da 1ª coluna
+  InitPositions[1] := 1;
+  InitPositions[2] := 10;
+  InitPositions[3] := 19;
+  InitPositions[4] := 28;
+  InitPositions[5] := 37;
+  InitPositions[6] := 46;
+
+  // 2. Calcular o total de peças pedidas na Interface
+  TotalPecas := spnMatAzul.Value + spnMatVerde.Value + spnMatCinza.Value +
+                spnBaseAzul.Value + spnBaseVerde.Value + spnBaseCinza.Value +
+                spnTampaAzul.Value + spnTampaVerde.Value + spnTampaCinza.Value;
+
+  // 3. Verificação de Segurança
+  if TotalPecas > 6 then
+  begin
+    ShowMessage('Erro: Só pode inicializar um máximo de 6 peças (limite da 1ª coluna do armazém). Reduza os valores!');
+    Exit; // Cancela a execução imediatamente
+  end;
+
+  if TotalPecas = 0 then
+  begin
+    ShowMessage('Aviso: Nenhuma peça selecionada para inicializar.');
+    Exit;
+  end;
+
+  // 4. Preparar o Armazém (Limpar matriz anterior)
+  SetLength(WAREHOUSE_Parts, 55);
+  for cel := 1 to Length(WAREHOUSE_Parts)-1 do
+  begin
+      WAREHOUSE_Parts[cel] := 0;
+  end;
+
+  LogMsg('SISTEMA: A inicializar ' + IntToStr(TotalPecas) + ' peça(s) no armazém...');
+
+  posIndex := 1; // Aponta para o primeiro espaço válido (InitPositions[1] que é a célula 1)
+
+  // 5. Inserir as peças de acordo com os valores da Interface
+  // A função InserirPeca vai usar os códigos corretos das peças
+  InserirPeca(Part_Raw_Blue, spnMatAzul.Value);     // Código 1
+  InserirPeca(Part_Raw_Green, spnMatVerde.Value);   // Código 2
+  InserirPeca(Part_Raw_Grey, spnMatCinza.Value);    // Código 3
+  InserirPeca(Part_Base_Blue, spnBaseAzul.Value);   // Código 4
+  InserirPeca(Part_Base_Green, spnBaseVerde.Value); // Código 5
+  InserirPeca(Part_Base_Grey, spnBaseCinza.Value);  // Código 6
+  InserirPeca(Part_Lid_Blue, spnTampaAzul.Value);   // Código 7
+  InserirPeca(Part_Lid_Green, spnTampaVerde.Value); // Código 8
+  InserirPeca(Part_Lid_Grey, spnTampaCinza.Value);  // Código 9
+
+  LogMsg('SISTEMA: Inicialização do armazém concluída!');
+
+  btnInicializarArmazem.Enabled := False;
+  LogMsg('SISTEMA: Botão de inicialização bloqueado por segurança.');
+
+end;
+
+
+//---------------- BOTÕES ADICIONAR ---------------------
+
+
+//Botão Adicionar Inbound
+procedure TFormDispatcher.btnAddAprovClick(Sender: TObject);
+begin
+  // 1. Verifica se o utilizador escolheu a cor da matéria-prima
+  if cbCorAprov.ItemIndex = -1 then
+  begin
+    ShowMessage('Por favor, selecione a Cor da Matéria-Prima!');
+    Exit;
+  end;
+
+  // 2. Verifica se a quantidade faz sentido
+  if spnQtdAprov.Value <= 0 then
+  begin
+    ShowMessage('A quantidade tem de ser pelo menos 1!');
+    Exit;
+  end;
+
+  // 3. O Truque: O código força a palavra "Matéria" automaticamente!
+  lstPlano.Items.Add('Aprovisionamento | Matéria ' + cbCorAprov.Text + ' | ' + IntToStr(spnQtdAprov.Value));
+
+  // 4. Regista a ação no nosso Logger
+  LogMsg('SISTEMA: Adicionado plano -> Aprovisionamento de ' + IntToStr(spnQtdAprov.Value) + 'x Matéria ' + cbCorAprov.Text);
+end;
+
+
+//Botão Adicionar Produção
+procedure TFormDispatcher.btnAddProdClick(Sender: TObject);
+begin
+  // 1. Verifica se o utilizador escolheu o produto e a cor
+  if (cbProdProd.ItemIndex = -1) or (cbCorProd.ItemIndex = -1) then
+  begin
+    ShowMessage('Por favor, selecione o Produto e a Cor a produzir!');
+    Exit;
+  end;
+
+  // 2. Verifica se a quantidade faz sentido
+  if spnQtdProd.Value <= 0 then
+  begin
+    ShowMessage('A quantidade tem de ser pelo menos 1!');
+    Exit;
+  end;
+
+  // 3. Junta tudo e envia para a ListBox no formato padrão
+  lstPlano.Items.Add('Produção | ' + cbProdProd.Text + ' ' + cbCorProd.Text + ' | ' + IntToStr(spnQtdProd.Value));
+
+  // 4. Regista a ação no nosso Logger
+  LogMsg('SISTEMA: Adicionado plano -> Produção de ' + IntToStr(spnQtdProd.Value) + 'x ' + cbProdProd.Text + ' ' + cbCorProd.Text);
+end;
+
+
+//Botão Adicionar Expedição
+procedure TFormDispatcher.btnAddExpClick(Sender: TObject);
+begin
+  // 1. Verifica se o utilizador escolheu o produto e a cor
+  if (cbProdExp.ItemIndex = -1) or (cbCorExp.ItemIndex = -1) then
+  begin
+    ShowMessage('Por favor, selecione o Produto e a Cor a expedir!');
+    Exit;
+  end;
+
+  // 2. Verifica se a quantidade é válida
+  if spnQtdExp.Value <= 0 then
+  begin
+    ShowMessage('A quantidade tem de ser pelo menos 1!');
+    Exit;
+  end;
+
+  // 3. Junta tudo e envia para a ListBox no formato padrão
+  lstPlano.Items.Add('Expedição | ' + cbProdExp.Text + ' ' + cbCorExp.Text + ' | ' + IntToStr(spnQtdExp.Value));
+
+  // 4. Regista a ação no nosso Logger
+  LogMsg('SISTEMA: Adicionado plano -> Expedição de ' + IntToStr(spnQtdExp.Value) + 'x ' + cbProdExp.Text + ' ' + cbCorExp.Text);
+end;
+
+// -----------------------------------------------------------------------------
+
+
+//Botão Limpar
+procedure TFormDispatcher.btnLimparClick(Sender: TObject);
+var
+  IndexSelecionado: integer;
+begin
+  // 1. Descobrir qual é a linha que o utilizador selecionou na ListBox
+  IndexSelecionado := lstPlano.ItemIndex;
+
+  // 2. Verificar se há realmente algo selecionado (-1 significa que não há nada clicado)
+  if IndexSelecionado = -1 then
+  begin
+    // Nuance: Se a lista estiver totalmente vazia, damos um aviso diferente
+    if lstPlano.Items.Count = 0 then
+      ShowMessage('O plano já está vazio. Não há registos para limpar!')
+    else
+      ShowMessage('Atenção: Por favor, clique no registo que deseja apagar antes de carregar em Limpar.');
+
+    Exit; // Sai do procedimento para não tentar apagar o vazio (o que daria erro fatal no programa)
+  end;
+
+  // 3. Nuance: Registar no log da fábrica o que estamos a remover antes de o apagar de vez
+  LogMsg('SISTEMA: Registo removido do plano -> ' + lstPlano.Items[IndexSelecionado]);
+
+  // 4. Apagar efetivamente a linha selecionada da ListBox
+  lstPlano.Items.Delete(IndexSelecionado);
+end;
+
+
+//Botão Executar
+procedure TFormDispatcher.btnExecutarClick(Sender: TObject);
+var
+  i: integer;
+  linha, tarefaStr, pecaStr, qtdStr: string;
+  pos1, pos2: integer;
+  ordem: TProduction_Order;
+begin
+  // --- FASE 1: Verificações de Segurança ---
+  if lstPlano.Items.Count = 0 then
+  begin
+    ShowMessage('Aviso: O plano está vazio! Adicione tarefas primeiro.');
+    Exit;
+  end;
+
+  // Garante que o Autómato está ligado antes de enviarmos comandos
+  if M_Connection_Status() <= 0 then
+  begin
+    ShowMessage('Erro Crítico: O PLC não está conectado! Clique em "CONECTAR PLC" primeiro.');
+    Exit;
+  end;
+
+  // --- FASE 2: Preparar o Array Principal ---
+  SetLength(Production_Orders, lstPlano.Items.Count);
+
+  // --- FASE 3: Ler e Traduzir Linha a Linha ---
+  for i := 0 to lstPlano.Items.Count - 1 do
+  begin
+    linha := lstPlano.Items[i]; // Exemplo que estamos a ler: "Produção | Tampa Verde | 2"
+
+    // Cortar a string para extrair a Tarefa
+    pos1 := Pos(' | ', linha);
+    tarefaStr := Copy(linha, 1, pos1 - 1);
+    linha := Copy(linha, pos1 + 3, Length(linha)); // O que sobra: "Tampa Verde | 2"
+
+    // Cortar a string para extrair a Peça e a Quantidade
+    pos2 := Pos(' | ', linha);
+    pecaStr := Copy(linha, 1, pos2 - 1);
+    qtdStr := Copy(linha, pos2 + 3, Length(linha));
+
+    // --- TRADUÇÃO DAS TAREFAS ---
+    if tarefaStr = 'Aprovisionamento' then ordem.order_type := Type_Delivery
+    else if tarefaStr = 'Produção' then ordem.order_type := Type_Production
+    else if tarefaStr = 'Expedição' then ordem.order_type := Type_Expedition;
+
+    // --- TRADUÇÃO DAS PEÇAS ---
+    if pecaStr = 'Matéria Azul' then ordem.part_type := Part_Raw_Blue
+    else if pecaStr = 'Matéria Verde' then ordem.part_type := Part_Raw_Green
+    else if pecaStr = 'Matéria Cinza' then ordem.part_type := Part_Raw_Grey
+    else if pecaStr = 'Base Azul' then ordem.part_type := Part_Base_Blue
+    else if pecaStr = 'Base Verde' then ordem.part_type := Part_Base_Green
+    else if pecaStr = 'Base Cinza' then ordem.part_type := Part_Base_Grey
+    else if pecaStr = 'Tampa Azul' then ordem.part_type := Part_Lid_Blue
+    else if pecaStr = 'Tampa Verde' then ordem.part_type := Part_Lid_Green
+    else if pecaStr = 'Tampa Cinza' then ordem.part_type := Part_Lid_Grey;
+
+    // --- TRADUÇÃO DA QUANTIDADE ---
+    ordem.part_numbers := StrToInt(qtdStr);
+
+    // Guardar esta ordem devidamente traduzida no nosso array global
+    Production_Orders[i] := ordem;
+  end;
+
+  // --- FASE 4: Iniciar o Processo Fabril ---
+  LogMsg('SISTEMA: A converter ' + IntToStr(lstPlano.Items.Count) + ' linha(s) para tarefas de máquina...');
+
+  // Reiniciamos o índice de execução (crucial se fores executar vários planos seguidos)
+  idx_Task_Executing := 0;
+
+  // Usamos a função do professor para transformar estas ordens nas "Stages" da máquina de estados
+  SimpleScheduler(Production_Orders, ShopTasks);
+
+  // Ligar o "motor" (se não estivesse já ligado)
+  Timer1.Enabled := true;
+
+  LogMsg('SISTEMA: Execução do plano iniciada!');
+end;
+
+
+//BOTÃO Extrair Relatório
+procedure TFormDispatcher.btnExtrairRelatorioClick(Sender: TObject);
+var
+  NomeFicheiro: string;
+begin
+  // 1. Verificar se há realmente algo para guardar
+  if memLogger.Lines.Count = 0 then
+  begin
+    ShowMessage('Aviso: O Logger está vazio. Não há nada para extrair!');
+    Exit;
+  end;
+
+  // 2. Criar um nome de ficheiro único com a data e hora atual
+  // Exemplo de como vai ficar: "Relatorio_HS_Systems_20260326_184530.txt"
+  NomeFicheiro := 'Relatorio_HS_Systems_' + FormatDateTime('yyyymmdd_hhnnss', Now) + '.txt';
+
+  try
+    // 3. A magia do Lazarus: Guardar tudo num ficheiro com 1 linha de código!
+    memLogger.Lines.SaveToFile(NomeFicheiro);
+
+    // 4. Avisar o utilizador (no próprio log e com um pop-up)
+    LogMsg('SISTEMA: Relatório extraído com sucesso para o ficheiro -> ' + NomeFicheiro);
+    ShowMessage('Sucesso! Relatório guardado na pasta do teu projeto como: ' + sLineBreak + NomeFicheiro);
+  except
+    // Caso o Windows bloqueie a gravação por falta de permissões
+    ShowMessage('Erro: Não foi possível guardar o ficheiro. Verifique as permissões da pasta.');
+  end;
+end;
+
+
+//----------------------------- Fim código Botões -----------------------------
+
+
+//******************************************************************************
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//******************************************************************************
 
 end.
 
