@@ -99,7 +99,9 @@ type
     GroupBox2: TGroupBox;
     GroupBox3: TGroupBox;
     GroupBox4: TGroupBox;
-    GroupBox5: TGroupBox;
+    Image1: TImage;
+    Image2: TImage;
+    Image3: TImage;
     imgLogo: TImage;
     Label1: TLabel;
     Label10: TLabel;
@@ -125,15 +127,15 @@ type
     Label9: TLabel;
     lstPlano: TListBox;
     memLogger: TMemo;
-    Memo3: TMemo;
     PageControl1: TPageControl;
     Header: TPanel;
     Footer: TPanel;
     PageControlTarefas: TPageControl;
     panelProducao: TPanel;
     panelArmazem: TPanel;
-    Panel2: TPanel;
+    pnlRelogio: TPanel;
     btnPLC: TSpeedButton;
+    Shape1: TShape;
     shpStatusPLC: TShape;
     spnMatAzul: TSpinEdit;
     spnMatVerde: TSpinEdit;
@@ -173,11 +175,11 @@ type
     procedure GroupBox2Click(Sender: TObject);
     procedure GroupBox3Click(Sender: TObject);
     procedure imgLogoClick(Sender: TObject);
+    procedure Label13Click(Sender: TObject);
     procedure Label1Click(Sender: TObject);
     procedure Label2Click(Sender: TObject);
     procedure Label3Click(Sender: TObject);
     procedure HeaderClick(Sender: TObject);
-    procedure Panel2Click(Sender: TObject);
     procedure TabSheet2ContextPopup(Sender: TObject; MousePos: TPoint;
       var Handled: Boolean);
     procedure Timer1Timer(Sender: TObject);
@@ -868,6 +870,11 @@ begin
 
 end;
 
+procedure TFormDispatcher.Label13Click(Sender: TObject);
+begin
+
+end;
+
 
 procedure TFormDispatcher.Label1Click(Sender: TObject);
 begin
@@ -889,10 +896,6 @@ begin
 
 end;
 
-procedure TFormDispatcher.Panel2Click(Sender: TObject);
-begin
-
-end;
 
 procedure TFormDispatcher.TabSheet2ContextPopup(Sender: TObject;
   MousePos: TPoint; var Handled: Boolean);
