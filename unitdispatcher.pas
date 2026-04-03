@@ -181,6 +181,8 @@ type
 
     procedure LogMsg(Texto: string); //Logger para aparecer as horas
 
+    procedure Priorizar_Expedicao_Verdes; // Lógica verdes primeiro
+
     function GET_AR_Position (Part : integer; Warehouse : array of integer): integer;
     procedure SET_AR_Position (idx : integer; Part : integer; var Warehouse : array of integer);
 
@@ -978,6 +980,56 @@ begin
   memLogger.Append(FormatDateTime('[hh:nn:ss] ', Now) + Texto);
 end;
 
+//Procedimento priorizar verdes
+procedure TFormDispatcher.Priorizar_Expedicao_Verdes;
+var
+  i, indexVerdes, indexOutros: integer;
+  ListaVerdes, ListaOutros: array of TProduction_Order;
+  ordem: TProduction_Order;
+begin
+  indexVerdes := 0;
+  indexOutros := 0;
+
+  // 1. Percorrer o plano original e separar
+  for i := 0 to Length(Production_Orders) - 1 do
+  begin
+    ordem := Production_Orders[i];
+
+    // NOVA LÓGICA: Se for uma peça da família VERDE (Matéria, Base ou Tampa)
+    // Puxamos todas as tarefas associadas a elas para o topo!
+    if (ordem.part_type = Part_Base_Green) or
+       (ordem.part_type = Part_Lid_Green) or
+       (ordem.part_type = Part_Raw_Green) then
+    begin
+      SetLength(ListaVerdes, indexVerdes + 1);
+      ListaVerdes[indexVerdes] := ordem;
+      Inc(indexVerdes); // Como o ciclo for avança de cima para baixo, a Produção entra sempre antes da Expedição!
+    end
+    else
+    begin
+      // Peças Azuis e Cinzentas ficam na lista de espera
+      SetLength(ListaOutros, indexOutros + 1);
+      ListaOutros[indexOutros] := ordem;
+      Inc(indexOutros);
+    end;
+  end;
+
+  // 2. Reconstruir o array principal: Primeiro todos os passos dos Verdes!
+  for i := 0 to indexVerdes - 1 do
+  begin
+    Production_Orders[i] := ListaVerdes[i];
+  end;
+
+  // 3. Reconstruir o array principal: Depois as restantes peças
+  for i := 0 to indexOutros - 1 do
+  begin
+    Production_Orders[indexVerdes + i] := ListaOutros[i];
+  end;
+
+  // 4. Se encontrou alguma peça verde para puxar para cima, avisa no Logger
+  if indexVerdes > 0 then
+    LogMsg('SISTEMA: Regra aplicada! ' + IntToStr(indexVerdes) + ' tarefa(s) da família Verde puxadas para o início da fila.');
+end;
 
 //----------------------------- Fim código interno -----------------------------
 
@@ -1311,6 +1363,9 @@ begin
 
   // --- FASE 4: Iniciar o Processo Fabril ---
   LogMsg('SISTEMA: A converter ' + IntToStr(lstPlano.Items.Count) + ' linha(s) para tarefas de máquina...');
+
+  //Priorizar a expedição das peças verdes
+  Priorizar_Expedicao_Verdes;
 
   // Reiniciamos o índice de execução (crucial se fores executar vários planos seguidos)
   idx_Task_Executing := 0;
