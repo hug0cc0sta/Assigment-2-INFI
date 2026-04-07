@@ -6,7 +6,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  Menus, ComCtrls, Buttons, Spin, Grids,
+  Menus, ComCtrls, Buttons, Spin, Grids, ValEdit,
   comUnit;
 
 type
@@ -99,6 +99,9 @@ type
     Image1: TImage;
     Image2: TImage;
     Image3: TImage;
+    Image4: TImage;
+    Image5: TImage;
+    Image6: TImage;
     imgLogo: TImage;
     Label1: TLabel;
     Label10: TLabel;
@@ -113,6 +116,17 @@ type
     Label19: TLabel;
     Label20: TLabel;
     Label21: TLabel;
+    Label22: TLabel;
+    Label23: TLabel;
+    Label24: TLabel;
+    Label25: TLabel;
+    Label26: TLabel;
+    Label27: TLabel;
+    Label28: TLabel;
+    Label29: TLabel;
+    Label30: TLabel;
+    Label31: TLabel;
+    Label32: TLabel;
     labelRelogio: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -127,12 +141,18 @@ type
     PageControl1: TPageControl;
     Header: TPanel;
     Footer: TPanel;
+    PageControl2: TPageControl;
     PageControlTarefas: TPageControl;
     panelProducao: TPanel;
     panelArmazem: TPanel;
     pnlRelogio: TPanel;
     btnPLC: TSpeedButton;
     Shape1: TShape;
+    Shape2: TShape;
+    Shape3: TShape;
+    Shape4: TShape;
+    Shape5: TShape;
+    Shape6: TShape;
     shpStatusPLC: TShape;
     spnMatAzul: TSpinEdit;
     spnMatVerde: TSpinEdit;
@@ -155,6 +175,8 @@ type
     TabSheet6: TTabSheet;
     TabSheet7: TTabSheet;
     Expedicao: TTabSheet;
+    TabSheet8: TTabSheet;
+    TabSheet9: TTabSheet;
     Timer1: TTimer;
     procedure BExecuteClick(Sender: TObject);
     procedure BInitiatilizeClick(Sender: TObject);

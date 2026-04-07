@@ -990,42 +990,45 @@ begin
   indexVerdes := 0;
   indexOutros := 0;
 
-  // 1. Percorrer o plano original e separar os "VIPs" do resto
+  // 1. Percorrer o plano original e separar
   for i := 0 to Length(Production_Orders) - 1 do
   begin
     ordem := Production_Orders[i];
 
-    // Se for do Tipo Expedição E a peça for uma Base Verde ou Tampa Verde
-    if (ordem.order_type = Type_Expedition) and
-       ((ordem.part_type = Part_Base_Green) or (ordem.part_type = Part_Lid_Green)) then
+    // NOVA LÓGICA: Se for uma peça da família VERDE (Matéria, Base ou Tampa)
+    // Puxamos todas as tarefas associadas a elas para o topo!
+    if (ordem.part_type = Part_Base_Green) or
+       (ordem.part_type = Part_Lid_Green) or
+       (ordem.part_type = Part_Raw_Green) then
     begin
       SetLength(ListaVerdes, indexVerdes + 1);
       ListaVerdes[indexVerdes] := ordem;
-      Inc(indexVerdes);
+      Inc(indexVerdes); // Como o ciclo for avança de cima para baixo, a Produção entra sempre antes da Expedição!
     end
     else
     begin
+      // Peças Azuis e Cinzentas ficam na lista de espera
       SetLength(ListaOutros, indexOutros + 1);
       ListaOutros[indexOutros] := ordem;
       Inc(indexOutros);
     end;
   end;
 
-  // 2. Reconstruir o array principal: Primeiro os Verdes!
+  // 2. Reconstruir o array principal: Primeiro todos os passos dos Verdes!
   for i := 0 to indexVerdes - 1 do
   begin
     Production_Orders[i] := ListaVerdes[i];
   end;
 
-  // 3. Reconstruir o array principal: Depois os Outros
+  // 3. Reconstruir o array principal: Depois as restantes peças
   for i := 0 to indexOutros - 1 do
   begin
     Production_Orders[indexVerdes + i] := ListaOutros[i];
   end;
 
-  // 4. Se encontrou alguma peça verde para puxar para cima, avisa no Logger!
+  // 4. Se encontrou alguma peça verde para puxar para cima, avisa no Logger
   if indexVerdes > 0 then
-    LogMsg('SISTEMA: Regra aplicada! ' + IntToStr(indexVerdes) + ' expedição(ões) de peças Verdes movida(s) para o início da fila.');
+    LogMsg('SISTEMA: Regra aplicada! ' + IntToStr(indexVerdes) + ' tarefa(s) da família Verde puxadas para o início da fila.');
 end;
 
 //----------------------------- Fim código interno -----------------------------
