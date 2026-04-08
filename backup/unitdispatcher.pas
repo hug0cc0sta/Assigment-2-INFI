@@ -87,15 +87,19 @@ type
     btnExecutar: TButton;
     btnLimpar: TButton;
     btnExtrairRelatorio: TButton;
+    Button1: TButton;
+    Button2: TButton;
     cbCorProd: TComboBox;
     cbCorExp: TComboBox;
     cbProduto: TComboBox;
     cbCorAprov: TComboBox;
     cbProdProd: TComboBox;
     cbProdExp: TComboBox;
+    GroupBox1: TGroupBox;
     GroupBox2: TGroupBox;
     GroupBox3: TGroupBox;
     GroupBox4: TGroupBox;
+    GroupBox5: TGroupBox;
     Image1: TImage;
     Image2: TImage;
     Image3: TImage;
@@ -127,6 +131,19 @@ type
     Label30: TLabel;
     Label31: TLabel;
     Label32: TLabel;
+    Label33: TLabel;
+    lblTotalRecebidas: TLabel;
+    lblEmProcessamento: TLabel;
+    lblTotalExpedidas: TLabel;
+    lblArmazemMatAzul: TLabel;
+    lblArmazemMatVerde: TLabel;
+    lblArmazemMatCinza: TLabel;
+    lblArmazemTampaAzul: TLabel;
+    lblArmazemTampaVerde: TLabel;
+    lblArmazemTampaCinza: TLabel;
+    lblArmazemBaseAzul: TLabel;
+    lblArmazemBaseVerde: TLabel;
+    lblArmazemBaseCinza: TLabel;
     labelRelogio: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -143,6 +160,7 @@ type
     Footer: TPanel;
     PageControl2: TPageControl;
     PageControlTarefas: TPageControl;
+    Panel1: TPanel;
     panelProducao: TPanel;
     panelArmazem: TPanel;
     pnlRelogio: TPanel;
@@ -205,6 +223,8 @@ type
 
     procedure Priorizar_Expedicao_Verdes; // Lógica verdes primeiro
 
+    procedure Atualizar_SCADA_Armazem; // Interface Contagem de Peças
+
     function GET_AR_Position (Part : integer; Warehouse : array of integer): integer;
     procedure SET_AR_Position (idx : integer; Part : integer; var Warehouse : array of integer);
 
@@ -241,6 +261,11 @@ var
 
   // Status of each cell in the warehouse.
   WAREHOUSE_Parts           : array of integer;         //warehouse parts in each position
+
+  //Variáveis de Contagem
+  Total_Recebidas : integer = 0;
+  Total_Expedidas : integer = 0;
+  Em_Processamento : integer = 0;
 
 
 implementation
@@ -569,6 +594,9 @@ procedure TFormDispatcher.Timer1Timer(Sender: TObject);
 begin
   BExecuteClick(Self);
   labelRelogio.Caption := FormatDateTime('hh:nn:ss', Now);
+
+  Atualizar_SCADA_Armazem; //Atualiza a cada segundo o armazem
+
 end;
 
 
@@ -759,6 +787,9 @@ begin
              LogMsg('PRODUÇÃO: A processar na máquina. A aguardar regresso...');
              // A peça já não está no armazém, podemos libertar o "nosso" registo virtual
              SET_AR_Position(part_position_AR, 0, WAREHOUSE_Parts);
+
+             Inc(Em_Processamento);//Incrementar Variável Global
+
              current_operation := Stage_Wait_Prod_Return;
           end;
         end;
@@ -796,6 +827,9 @@ begin
             begin
                LogMsg('PRODUÇÃO: Concluída! Guardado na pos ' + IntToStr(part_position_AR));
                SET_AR_Position(part_position_AR, part_type, WAREHOUSE_Parts);
+
+               Dec(Em_Processamento); //Atualizar variavel global quando peça entra no armazem deixa de estar a circular
+
                current_operation := Stage_Finished;
             end
             else if (r < 0) then
@@ -870,6 +904,9 @@ begin
             r := M_Do_Expedition(Part_Destination);          // Expedition
 
             if( r = 1) then                                  // sucess
+
+             Inc(Total_Expedidas); //Incrementar Variável Global
+
              current_operation :=  Stage_Clear_Pos_AR;
           end;
         end;
@@ -977,6 +1014,9 @@ begin
                LogMsg('INBOUND: Peça guardada na posição ' + IntToStr(part_position_AR));
                // Guardamos a informação de que a posição deixou de estar livre e tem a nova peça
                SET_AR_Position(part_position_AR, part_type, WAREHOUSE_Parts);
+
+               Inc(Total_Recebidas);  //Incrementar Variável Global
+
                // A ordem de Aprovisionamento está oficialmente concluída!
                current_operation := Stage_Finished;
             end;
@@ -1051,6 +1091,50 @@ begin
   // 4. Se encontrou alguma peça verde para puxar para cima, avisa no Logger
   if indexVerdes > 0 then
     LogMsg('SISTEMA: Regra aplicada! ' + IntToStr(indexVerdes) + ' tarefa(s) da família Verde puxadas para o início da fila.');
+end;
+
+//Atualiza o Armazem
+procedure TFormDispatcher.Atualizar_SCADA_Armazem;
+var
+  i: integer;
+  cMatAzul, cMatVerde, cMatCinza: integer;
+  cBaseAzul, cBaseVerde, cBaseCinza: integer;
+  cTampaAzul, cTampaVerde, cTampaCinza: integer;
+begin
+  // 1. Colocar todos os contadores a zero antes de começar a contar
+  cMatAzul := 0; cMatVerde := 0; cMatCinza := 0;
+  cBaseAzul := 0; cBaseVerde := 0; cBaseCinza := 0;
+  cTampaAzul := 0; cTampaVerde := 0; cTampaCinza := 0;
+
+  // 2. Percorrer cada "prateleira" do nosso armazém
+  for i := 1 to Length(WAREHOUSE_Parts) - 1 do
+  begin
+    // Descobrir qual é a peça que está nesta prateleira e somar +1 ao contador certo
+    case WAREHOUSE_Parts[i] of
+      Part_Raw_Blue:   Inc(cMatAzul);
+      Part_Raw_Green:  Inc(cMatVerde);
+      Part_Raw_Grey:   Inc(cMatCinza);
+      Part_Base_Blue:  Inc(cBaseAzul);
+      Part_Base_Green: Inc(cBaseVerde);
+      Part_Base_Grey:  Inc(cBaseCinza);
+      Part_Lid_Blue:   Inc(cTampaAzul);
+      Part_Lid_Green:  Inc(cTampaVerde);
+      Part_Lid_Grey:   Inc(cTampaCinza);
+    end;
+  end;
+
+  // 3. Imprimir o resultado final nas Labels que criaste
+  lblArmazemMatAzul.Caption   := 'Matéria Azul: ' + IntToStr(cMatAzul);
+  lblArmazemMatVerde.Caption  := 'Matéria Verde: ' + IntToStr(cMatVerde);
+  lblArmazemMatCinza.Caption  := 'Matéria Cinza: ' + IntToStr(cMatCinza);
+
+  lblArmazemBaseAzul.Caption  := 'Base Azul: ' + IntToStr(cBaseAzul);
+  lblArmazemBaseVerde.Caption := 'Base Verde: ' + IntToStr(cBaseVerde);
+  lblArmazemBaseCinza.Caption := 'Base Cinza: ' + IntToStr(cBaseCinza);
+
+  lblArmazemTampaAzul.Caption := 'Tampa Azul: ' + IntToStr(cTampaAzul);
+  lblArmazemTampaVerde.Caption:= 'Tampa Verde: ' + IntToStr(cTampaVerde);
+  lblArmazemTampaCinza.Caption:= 'Tampa Cinza: ' + IntToStr(cTampaCinza);
 end;
 
 //----------------------------- Fim código interno -----------------------------
