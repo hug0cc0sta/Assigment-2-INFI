@@ -632,7 +632,24 @@ begin
 
   Atualizar_SCADA_Armazem; //Atualiza a cada segundo o armazem
 
-  UpdateMachineTimers(ShopResources);
+  UpdateMachineTimers(ShopResources);// Atualiza os cronómetros
+
+  // Fechar a Fabrica qnd tarefas são todas concluidas
+  if (Length(ShopTasks) > 0) and (idx_Task_Executing >= Length(ShopTasks)) then
+  begin
+    Timer1.Enabled := False; // Pára o relógio da fábrica
+
+    LogMsg('SISTEMA: Plano Semanal concluído! A aguardar Validação de Qualidade.');
+    ShowMessage('Fim do Plano Semanal!' + sLineBreak + 'Por favor, valide a qualidade das peças produzidas no separador Análise de Dados.');
+
+    // Limpa a lista de tarefas para não entrar em loop
+    SetLength(ShopTasks, 0);
+    idx_Task_Executing := 0;
+
+    // Muda o ecrã automaticamente para o separador da grelha (ajusta o nome do separador se for preciso)
+    PageControl1.ActivePage := TabSheet3; // Substitui TabSheet3 pelo nome do separador "Análise de Dados"
+
+  end;
 end;
 
 

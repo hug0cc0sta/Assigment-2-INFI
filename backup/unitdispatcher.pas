@@ -1221,7 +1221,10 @@ begin
   // Atualiza a UI do Armazém
   ////if AR_Was_Busy then shpStatusAR.Brush.Color := clLime
   ////else shpStatusAR.Brush.Color := clSilver;
-  lblTempoAR.Caption := FormatFloat('0.0', AR_Op_Total) + ' s';
+  if AR_Wait_Count > 0 then
+     lblTempoEsperaAR.Caption := FormatFloat('0.0', AR_Wait_Total / AR_Wait_Count) + ' s (média)'
+  else
+     lblTempoEsperaAR.Caption := '0.0 s (média)';
 
 
   // --------------------------------------------------------------------------
