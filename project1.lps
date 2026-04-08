@@ -43,7 +43,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="43"/>
         <CursorPos X="21" Y="53"/>
-        <UsageCount Value="128"/>
+        <UsageCount Value="131"/>
       </Unit3>
       <Unit4>
         <Filename Value="unitdispatcher.pas"/>
@@ -53,9 +53,9 @@
         <ResourceBaseClass Value="Form"/>
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="620"/>
-        <CursorPos Y="651"/>
-        <UsageCount Value="127"/>
+        <TopLine Value="625"/>
+        <CursorPos X="12" Y="634"/>
+        <UsageCount Value="130"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit4>
@@ -100,7 +100,7 @@
         <UsageCount Value="13"/>
       </Unit10>
     </Units>
-    <JumpHistory Count="26" HistoryIndex="25">
+    <JumpHistory Count="28" HistoryIndex="27">
       <Position1>
         <Filename Value="unitdispatcher.pas"/>
         <Caret Line="654" Column="27" TopLine="642"/>
@@ -205,6 +205,14 @@
         <Filename Value="unitdispatcher.pas"/>
         <Caret Line="1193" Column="90" TopLine="1164"/>
       </Position26>
+      <Position27>
+        <Filename Value="unitdispatcher.pas"/>
+        <Caret Line="651" Column="44" TopLine="271"/>
+      </Position27>
+      <Position28>
+        <Filename Value="unitdispatcher.pas"/>
+        <Caret Line="642" Column="3" TopLine="623"/>
+      </Position28>
     </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>

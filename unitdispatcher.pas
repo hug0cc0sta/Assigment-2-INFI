@@ -627,8 +627,15 @@ end;
 
 procedure TFormDispatcher.Timer1Timer(Sender: TObject);
 begin
-  BExecuteClick(Self);
+  // RELÓGIO DA UI (Corre sempre, independentemente do PLC)
   labelRelogio.Caption := FormatDateTime('hh:nn:ss', Now);
+
+  // Se o botão ainda diz "CONECTAR PLC", o código pára aqui e sai da procedure.
+  if btnPLC.Caption = 'CONECTAR PLC' then
+    Exit;
+
+  BExecuteClick(Self);
+
 
   Atualizar_SCADA_Armazem; //Atualiza a cada segundo o armazem
 
