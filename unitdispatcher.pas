@@ -87,6 +87,8 @@ type
     btnExecutar: TButton;
     btnLimpar: TButton;
     btnExtrairRelatorio: TButton;
+    Button1: TButton;
+    Button2: TButton;
     cbCorProd: TComboBox;
     cbCorExp: TComboBox;
     cbProduto: TComboBox;
@@ -127,6 +129,7 @@ type
     Label30: TLabel;
     Label31: TLabel;
     Label32: TLabel;
+    Label33: TLabel;
     labelRelogio: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -143,6 +146,7 @@ type
     Footer: TPanel;
     PageControl2: TPageControl;
     PageControlTarefas: TPageControl;
+    Panel1: TPanel;
     panelProducao: TPanel;
     panelArmazem: TPanel;
     pnlRelogio: TPanel;

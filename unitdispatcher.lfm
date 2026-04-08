@@ -1,7 +1,7 @@
 object FormDispatcher: TFormDispatcher
-  Left = 286
+  Left = 305
   Height = 797
-  Top = 166
+  Top = 189
   Width = 1645
   Caption = 'Dispatcher'
   ClientHeight = 797
@@ -4397,9 +4397,9 @@ object FormDispatcher: TFormDispatcher
       end
       object StringGrid1: TStringGrid
         Left = 96
-        Height = 368
+        Height = 232
         Top = 96
-        Width = 552
+        Width = 568
         ColCount = 6
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goRowSelect, goSmoothScroll]
         RowCount = 7
@@ -4448,6 +4448,39 @@ object FormDispatcher: TFormDispatcher
           0
           'Defeituoso'
         )
+      end
+      object Panel1: TPanel
+        Left = 96
+        Height = 61
+        Top = 343
+        Width = 168
+        ClientHeight = 61
+        ClientWidth = 168
+        ParentBackground = False
+        TabOrder = 2
+        object Label33: TLabel
+          Left = 24
+          Height = 20
+          Top = 24
+          Width = 129
+          Caption = 'Indica Selecionado'
+        end
+      end
+      object Button1: TButton
+        Left = 288
+        Height = 60
+        Top = 343
+        Width = 176
+        Caption = 'Defeituoso +1'
+        TabOrder = 3
+      end
+      object Button2: TButton
+        Left = 480
+        Height = 60
+        Top = 344
+        Width = 175
+        Caption = 'Defeituoso -1'
+        TabOrder = 4
       end
     end
     object TabSheet3: TTabSheet

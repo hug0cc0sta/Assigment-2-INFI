@@ -1,10 +1,10 @@
 object FormDispatcher: TFormDispatcher
-  Left = 206
-  Height = 802
-  Top = 116
+  Left = 286
+  Height = 797
+  Top = 166
   Width = 1645
   Caption = 'Dispatcher'
-  ClientHeight = 802
+  ClientHeight = 797
   ClientWidth = 1645
   Color = clGrayText
   DesignTimePPI = 120
@@ -12,7 +12,7 @@ object FormDispatcher: TFormDispatcher
   OnCreate = FormCreate
   object PageControl1: TPageControl
     Left = 0
-    Height = 672
+    Height = 667
     Top = 100
     Width = 1645
     ActivePage = TabSheet5
@@ -23,7 +23,7 @@ object FormDispatcher: TFormDispatcher
     TabOrder = 0
     object TabSheet5: TTabSheet
       Caption = 'Info'
-      ClientHeight = 639
+      ClientHeight = 634
       ClientWidth = 1637
       object Shape2: TShape
         Left = 24
@@ -1526,7 +1526,7 @@ object FormDispatcher: TFormDispatcher
     end
     object TabSheet1: TTabSheet
       Caption = 'Produção'
-      ClientHeight = 639
+      ClientHeight = 634
       ClientWidth = 1637
       object BExecute: TButton
         Left = 1290
@@ -4369,8 +4369,8 @@ object FormDispatcher: TFormDispatcher
       end
     end
     object TabSheet2: TTabSheet
-      Caption = 'Armazém'
-      ClientHeight = 639
+      Caption = 'Monitorização'
+      ClientHeight = 634
       ClientWidth = 1637
       object panelArmazem: TPanel
         Left = 0
@@ -4388,28 +4388,66 @@ object FormDispatcher: TFormDispatcher
           Left = 40
           Height = 20
           Top = 16
-          Width = 371
-          Caption = 'Armazém - Visualização em tempo real das 54 posições'
+          Width = 476
+          Caption = 'Monitorização - Visualização em tempo real das 54 posições, ......................'
           Color = clWhite
           ParentColor = False
           ParentFont = False
         end
       end
       object StringGrid1: TStringGrid
-        Left = 176
-        Height = 560
+        Left = 96
+        Height = 368
         Top = 96
-        Width = 1208
-        BorderStyle = bsNone
-        Color = clWhite
-        ColCount = 9
-        DefaultColWidth = 130
-        DefaultRowHeight = 88
-        FixedCols = 0
-        FixedRows = 0
-        GridLineWidth = 4
-        RowCount = 6
+        Width = 552
+        ColCount = 6
+        Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goRowSelect, goSmoothScroll]
+        RowCount = 7
         TabOrder = 1
+        ColWidths = (
+          115
+          80
+          80
+          118
+          56
+          102
+        )
+        Cells = (
+          11
+          0
+          1
+          'Base Azul'
+          0
+          2
+          'Base Verde'
+          0
+          3
+          'Base Cinza'
+          0
+          4
+          'Tampa Azul'
+          0
+          5
+          'Tampa Verde'
+          0
+          6
+          'Tampa Cinza'
+          1
+          0
+          'Peças'
+          2
+          0
+          'Tipo'
+          3
+          0
+          'Total Produzido'
+          4
+          0
+          'OK'
+          5
+          0
+          'Defeituoso'
+        )
       end
     end
     object TabSheet3: TTabSheet
@@ -4558,7 +4596,7 @@ object FormDispatcher: TFormDispatcher
   object Footer: TPanel
     Left = 0
     Height = 30
-    Top = 772
+    Top = 767
     Width = 1645
     Align = alBottom
     BevelOuter = bvNone
