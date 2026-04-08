@@ -100,6 +100,7 @@ type
     GroupBox3: TGroupBox;
     GroupBox4: TGroupBox;
     GroupBox5: TGroupBox;
+    GroupBox6: TGroupBox;
     Image1: TImage;
     Image2: TImage;
     Image3: TImage;
@@ -132,6 +133,16 @@ type
     Label31: TLabel;
     Label32: TLabel;
     Label33: TLabel;
+    Label34: TLabel;
+    lblTempoInbound: TLabel;
+    Label36: TLabel;
+    Label37: TLabel;
+    Label38: TLabel;
+    Label39: TLabel;
+    lblTempoEsperaAR: TLabel;
+    lblTempoCell1: TLabel;
+    lblTempoCell2: TLabel;
+    lblTempoAR: TLabel;
     lblTotalRecebidas: TLabel;
     lblEmProcessamento: TLabel;
     lblTotalExpedidas: TLabel;
@@ -228,6 +239,7 @@ type
     function GET_AR_Position (Part : integer; Warehouse : array of integer): integer;
     procedure SET_AR_Position (idx : integer; Part : integer; var Warehouse : array of integer);
 
+    procedure UpdateMachineTimers(shopfloor: TResources);
   end;
 
 const
@@ -266,6 +278,29 @@ var
   Total_Recebidas : integer = 0;
   Total_Expedidas : integer = 0;
   Em_Processamento : integer = 0;
+
+  // MÉTRICAS 3.5 — Tempo acumulado de operação por máquina
+  AR_Op_Start      : TDateTime;   // Momento em que o AR ficou ocupado
+  AR_Op_Total      : Double;      // Segundos acumulados de operação do AR
+  AR_Was_Busy      : Boolean;     // Flag: estava ocupado no ciclo anterior?
+
+  Inbound_Op_Start : TDateTime;
+  Inbound_Op_Total : Double;
+  Inbound_Was_Busy : Boolean;
+
+  Cell1_Op_Start   : TDateTime;
+  Cell1_Op_Total   : Double;
+  Cell1_Was_Busy   : Boolean;     // Robot_1_Part > 0 → célula 1 em operação
+
+  Cell2_Op_Start   : TDateTime;
+  Cell2_Op_Total   : Double;
+  Cell2_Was_Busy   : Boolean;     // Robot_2_Part > 0 → célula 2 em operação
+
+  // MÉTRICAS 3.6 — Tempo médio de espera à entrada do armazém
+  AR_Wait_Start   : TDateTime;   // Início do episódio de espera atual
+  AR_Wait_Total   : Double;      // Soma de todos os tempos de espera (segundos)
+  AR_Wait_Count   : Integer;     // Número de episódios de espera registados
+  AR_Part_Waiting : Boolean;     // Flag: havia peça à espera no ciclo anterior?
 
 
 implementation
@@ -597,6 +632,7 @@ begin
 
   Atualizar_SCADA_Armazem; //Atualiza a cada segundo o armazem
 
+  UpdateMachineTimers(ShopResources);
 end;
 
 
@@ -1135,7 +1171,160 @@ begin
   lblArmazemTampaAzul.Caption := 'Tampa Azul: ' + IntToStr(cTampaAzul);
   lblArmazemTampaVerde.Caption:= 'Tampa Verde: ' + IntToStr(cTampaVerde);
   lblArmazemTampaCinza.Caption:= 'Tampa Cinza: ' + IntToStr(cTampaCinza);
+
+
+  // 4. Atualizar o Fluxo da Fábrica
+  lblTotalRecebidas.Caption := 'Matérias Recebidas: ' + IntToStr(Total_Recebidas);
+  lblEmProcessamento.Caption := 'Em Processamento: ' + IntToStr(Em_Processamento);
+  lblTotalExpedidas.Caption := 'Peças Expedidas: ' + IntToStr(Total_Expedidas);
+
+
 end;
+
+
+// ============================================================================
+// MÉTRICA 3.5 + 3.6 — UpdateMachineTimers (Lógica + UI Integrada) DEPOIS TENHO DE MUDAR ISTO E APGR COMENTÁRIOS ////
+// Chamada a cada tick do Timer1 (1 segundo).
+// Deteta transições de estado, acumula tempos e atualiza o Dashboard visual.
+// ============================================================================
+
+procedure TFormDispatcher.UpdateMachineTimers(shopfloor: TResources);
+var
+  Now_T      : TDateTime;
+  ElapsedSec : Double;
+
+  function SecsElapsed(T1, T2: TDateTime): Double;
+  begin
+    Result := Abs(T2 - T1) * 86400.0; // 1 dia = 86400 segundos
+  end;
+
+begin
+  Now_T := Now;
+
+  // --------------------------------------------------------------------------
+  // 3.5.A — ARMAZÉM AUTOMÁTICO (AR)
+  // --------------------------------------------------------------------------
+  if (not shopfloor.AR_free) and (not AR_Was_Busy) then
+  begin
+    AR_Op_Start := Now_T;
+    AR_Was_Busy := True;
+    LogMsg('MÉTRICAS [AR]: Início de operação registado.');
+  end
+  else if shopfloor.AR_free and AR_Was_Busy then
+  begin
+    ElapsedSec  := SecsElapsed(AR_Op_Start, Now_T);
+    AR_Op_Total := AR_Op_Total + ElapsedSec;
+    AR_Was_Busy := False;
+    LogMsg('MÉTRICAS [AR]: Operação concluída. Duração: ' + FormatFloat('0.0', ElapsedSec) + 's');
+  end;
+
+  // Atualiza a UI do Armazém
+  ////if AR_Was_Busy then shpStatusAR.Brush.Color := clLime
+  ////else shpStatusAR.Brush.Color := clSilver;
+  lblTempoAR.Caption := FormatFloat('0.0', AR_Op_Total) + ' s';
+
+
+  // --------------------------------------------------------------------------
+  // 3.5.B — INBOUND
+  // --------------------------------------------------------------------------
+  if (not shopfloor.Inbound_free) and (not Inbound_Was_Busy) then
+  begin
+    Inbound_Op_Start := Now_T;
+    Inbound_Was_Busy := True;
+    LogMsg('MÉTRICAS [INBOUND]: Início de operação registado.');
+  end
+  else if shopfloor.Inbound_free and Inbound_Was_Busy then
+  begin
+    ElapsedSec       := SecsElapsed(Inbound_Op_Start, Now_T);
+    Inbound_Op_Total := Inbound_Op_Total + ElapsedSec;
+    Inbound_Was_Busy := False;
+    LogMsg('MÉTRICAS [INBOUND]: Operação concluída. Duração: ' + FormatFloat('0.0', ElapsedSec) + 's');
+  end;
+
+  // Atualiza a UI do Inbound
+  ////if Inbound_Was_Busy then shpStatusInbound.Brush.Color := clLime
+  ////else shpStatusInbound.Brush.Color := clSilver;
+  lblTempoInbound.Caption := FormatFloat('0.0', Inbound_Op_Total) + ' s';
+
+
+  // --------------------------------------------------------------------------
+  // 3.5.C — CÉLULA 1 (Robot 1)
+  // --------------------------------------------------------------------------
+  if (shopfloor.Robot_1_Part > 0) and (not Cell1_Was_Busy) then
+  begin
+    Cell1_Op_Start := Now_T;
+    Cell1_Was_Busy := True;
+    LogMsg('MÉTRICAS [CÉLULA 1]: Início de operação registado.');
+  end
+  else if (shopfloor.Robot_1_Part = 0) and Cell1_Was_Busy then
+  begin
+    ElapsedSec     := SecsElapsed(Cell1_Op_Start, Now_T);
+    Cell1_Op_Total := Cell1_Op_Total + ElapsedSec;
+    Cell1_Was_Busy := False;
+    LogMsg('MÉTRICAS [CÉLULA 1]: Operação concluída. Duração: ' + FormatFloat('0.0', ElapsedSec) + 's');
+  end;
+
+  // Atualiza a UI da Célula 1
+  ////if Cell1_Was_Busy then shpStatusCell1.Brush.Color := clLime
+  ////else shpStatusCell1.Brush.Color := clSilver;
+  lblTempoCell1.Caption := FormatFloat('0.0', Cell1_Op_Total) + ' s';
+
+
+  // --------------------------------------------------------------------------
+  // 3.5.D — CÉLULA 2 (Robot 2)
+  // --------------------------------------------------------------------------
+  if (shopfloor.Robot_2_Part > 0) and (not Cell2_Was_Busy) then
+  begin
+    Cell2_Op_Start := Now_T;
+    Cell2_Was_Busy := True;
+    LogMsg('MÉTRICAS [CÉLULA 2]: Início de operação registado.');
+  end
+  else if (shopfloor.Robot_2_Part = 0) and Cell2_Was_Busy then
+  begin
+    ElapsedSec     := SecsElapsed(Cell2_Op_Start, Now_T);
+    Cell2_Op_Total := Cell2_Op_Total + ElapsedSec;
+    Cell2_Was_Busy := False;
+    LogMsg('MÉTRICAS [CÉLULA 2]: Operação concluída. Duração: ' + FormatFloat('0.0', ElapsedSec) + 's');
+  end;
+
+  // Atualiza a UI da Célula 2
+  ////if Cell2_Was_Busy then shpStatusCell2.Brush.Color := clLime
+  ////else shpStatusCell2.Brush.Color := clSilver;
+  lblTempoCell2.Caption := FormatFloat('0.0', Cell2_Op_Total) + ' s';
+
+
+  // --------------------------------------------------------------------------
+  // 3.6 — ESPERA À ENTRADA DO ARMAZÉM (Gargalo)
+  // --------------------------------------------------------------------------
+  if (shopfloor.AR_In_Part > 0) and (not shopfloor.AR_free) then
+  begin
+    if not AR_Part_Waiting then
+    begin
+      AR_Wait_Start   := Now_T;
+      AR_Part_Waiting := True;
+      LogMsg('MÉTRICAS [ESPERA AR]: Peça aguarda à entrada (AR ocupado).');
+    end;
+  end
+  else
+  begin
+    if AR_Part_Waiting then
+    begin
+      ElapsedSec      := SecsElapsed(AR_Wait_Start, Now_T);
+      AR_Wait_Total   := AR_Wait_Total + ElapsedSec;
+      Inc(AR_Wait_Count);
+      AR_Part_Waiting := False;
+      LogMsg('MÉTRICAS [ESPERA AR]: Espera terminada. Duração: ' + FormatFloat('0.0', ElapsedSec) + 's');
+    end;
+  end;
+
+  // Atualiza a UI da Espera
+  ////if AR_Part_Waiting then shpStatusEsperaAR.Brush.Color := clRed // Alerta vermelho!
+  ////else shpStatusEsperaAR.Brush.Color := clSilver;
+
+  lblTempoEsperaAR.Caption    := FormatFloat('0.0', AR_Wait_Total) + ' s';
+  //// lblContagemEsperaAR.Caption := IntToStr(AR_Wait_Count) + ' vezes';
+end;
+
 
 //----------------------------- Fim código interno -----------------------------
 
