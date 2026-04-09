@@ -293,6 +293,16 @@ var
   Total_Expedidas : integer = 0;
   Em_Processamento : integer = 0;
 
+
+  // Contadores persistentes de produção por tipo de peça
+  Prod_BaseAzul   : integer = 0;
+  Prod_BaseVerde  : integer = 0;
+  Prod_BaseCinza  : integer = 0;
+  Prod_TampaAzul  : integer = 0;
+  Prod_TampaVerde : integer = 0;
+  Prod_TampaCinza : integer = 0;
+
+
   // MÉTRICAS 3.5 — Tempo acumulado de operação por máquina
   AR_Op_Start      : TDateTime;   // Momento em que o AR ficou ocupado
   AR_Op_Total      : Double;      // Segundos acumulados de operação do AR
@@ -911,6 +921,17 @@ begin
                SET_AR_Position(part_position_AR, part_type, WAREHOUSE_Parts);
 
                Dec(Em_Processamento); //Atualizar variavel global quando peça entra no armazem deixa de estar a circular
+
+               // ← Incrementar o contador correto
+               case part_type of
+               Part_Base_Blue:  Inc(Prod_BaseAzul);
+               Part_Base_Green: Inc(Prod_BaseVerde);
+               Part_Base_Grey:  Inc(Prod_BaseCinza);
+               Part_Lid_Blue:   Inc(Prod_TampaAzul);
+               Part_Lid_Green:  Inc(Prod_TampaVerde);
+               Part_Lid_Grey:   Inc(Prod_TampaCinza);
+               end;
+
 
                current_operation := Stage_Finished;
             end
@@ -1854,25 +1875,12 @@ var
   qtd: integer;
 begin
   // --- FASE 1: Contar peças produzidas a partir das tarefas concluídas ---
-  cBaseAzul  := 0; cBaseVerde  := 0; cBaseCinza  := 0;
-  cTampaAzul := 0; cTampaVerde := 0; cTampaCinza := 0;
-
-  for i := 0 to Length(ShopTasks) - 1 do
-  begin
-    // Só conta tarefas de Produção que já terminaram
-    if (ShopTasks[i].task_type = Type_Production) and
-       (ShopTasks[i].current_operation = Stage_Finished) then
-    begin
-      case ShopTasks[i].part_type of
-        Part_Base_Blue:  Inc(cBaseAzul);
-        Part_Base_Green: Inc(cBaseVerde);
-        Part_Base_Grey:  Inc(cBaseCinza);
-        Part_Lid_Blue:   Inc(cTampaAzul);
-        Part_Lid_Green:  Inc(cTampaVerde);
-        Part_Lid_Grey:   Inc(cTampaCinza);
-      end;
-    end;
-  end;
+  cBaseAzul  := Prod_BaseAzul;
+  cBaseVerde := Prod_BaseVerde;
+  cBaseCinza := Prod_BaseCinza;
+  cTampaAzul := Prod_TampaAzul;
+  cTampaVerde:= Prod_TampaVerde;
+  cTampaCinza:= Prod_TampaCinza;
 
   // --- FASE 2: Contar defeituosos a partir da lstDefeito ---
   // Formato esperado de cada linha: "Produção | Tampa Verde | 2"

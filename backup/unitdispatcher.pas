@@ -661,6 +661,8 @@ begin
 
   UpdateMachineTimers(ShopResources);// Atualiza os cronómetros
 
+  Atualizar_Custos; //O Custo sobe em tempo real!
+
   // Fechar a Fabrica qnd tarefas são todas concluidas
   if (Length(ShopTasks) > 0) and (idx_Task_Executing >= Length(ShopTasks)) then
   begin
