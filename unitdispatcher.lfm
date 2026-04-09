@@ -4708,6 +4708,7 @@ object FormDispatcher: TFormDispatcher
           Width = 105
           Caption = 'Adicionar'
           TabOrder = 4
+          OnClick = btnAdicionarDefeitoClick
         end
         object btnDefeitosLimpar: TButton
           Left = 144
@@ -4716,6 +4717,7 @@ object FormDispatcher: TFormDispatcher
           Width = 105
           Caption = 'Limpar Linha'
           TabOrder = 5
+          OnClick = btnDefeitosLimparClick
         end
         object btnDefeitoConfirmar: TButton
           Left = 280
@@ -4724,6 +4726,7 @@ object FormDispatcher: TFormDispatcher
           Width = 306
           Caption = 'Confirmar'
           TabOrder = 6
+          OnClick = btnDefeitoConfirmarClick
         end
       end
     end

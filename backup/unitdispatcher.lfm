@@ -1,7 +1,7 @@
 object FormDispatcher: TFormDispatcher
-  Left = 339
+  Left = 287
   Height = 798
-  Top = 134
+  Top = 116
   Width = 1601
   Caption = 'Dispatcher'
   ClientHeight = 798
@@ -4398,7 +4398,7 @@ object FormDispatcher: TFormDispatcher
       object StringGrid1: TStringGrid
         Left = 48
         Height = 192
-        Top = 376
+        Top = 368
         Width = 560
         AutoFillColumns = True
         BorderStyle = bsNone
@@ -4672,7 +4672,6 @@ object FormDispatcher: TFormDispatcher
             'Tampa'
           )
           TabOrder = 0
-          Text = 'cbTipoDefeito'
         end
         object cbCorDefeito: TComboBox
           Left = 128
@@ -4686,7 +4685,6 @@ object FormDispatcher: TFormDispatcher
             'Cinza'
           )
           TabOrder = 1
-          Text = 'cbCorDefeito'
         end
         object edtQuantidadeDefeito: TEdit
           Left = 127
@@ -4694,13 +4692,12 @@ object FormDispatcher: TFormDispatcher
           Top = 96
           Width = 128
           TabOrder = 2
-          Text = 'edtQuantidadeDefeito'
         end
         object lstDefeito: TListBox
-          Left = 280
-          Height = 216
+          Left = 272
+          Height = 200
           Top = 0
-          Width = 306
+          Width = 320
           ItemHeight = 0
           TabOrder = 3
         end
@@ -4711,6 +4708,7 @@ object FormDispatcher: TFormDispatcher
           Width = 105
           Caption = 'Adicionar'
           TabOrder = 4
+          OnClick = btnAdicionarDefeitoClick
         end
         object btnDefeitosLimpar: TButton
           Left = 144
@@ -4719,6 +4717,14 @@ object FormDispatcher: TFormDispatcher
           Width = 105
           Caption = 'Limpar Linha'
           TabOrder = 5
+        end
+        object btnDefeitoConfirmar: TButton
+          Left = 280
+          Height = 47
+          Top = 216
+          Width = 306
+          Caption = 'Confirmar'
+          TabOrder = 6
         end
       end
     end
@@ -4849,7 +4855,7 @@ object FormDispatcher: TFormDispatcher
     object btnPLC: TSpeedButton
       Left = 1232
       Height = 56
-      Top = 25
+      Top = 26
       Width = 184
       Caption = 'CONECTAR PLC'
       Color = clCream

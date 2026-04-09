@@ -229,6 +229,7 @@ type
     procedure Timer1Timer(Sender: TObject);
     procedure btnAdicionarDefeitoClick(Sender: TObject);
     procedure btnDefeitosLimparClick(Sender: TObject);
+    procedure btnDefeitoConfirmarClick(Sender: TObject);
   private
 
   public
@@ -249,6 +250,7 @@ type
     procedure SET_AR_Position (idx : integer; Part : integer; var Warehouse : array of integer);
 
     procedure UpdateMachineTimers(shopfloor: TResources);
+
   end;
 
 const
@@ -1781,7 +1783,7 @@ begin
   end;
 
   // 2. Verifica se a quantidade faz sentido
-  if StrToInt(edtQuantidadeDefeito.Text) <= 0 then
+  if StrToIntDef(edtQuantidadeDefeito.Text,0) <= 0 then
   begin
     ShowMessage('A quantidade tem de ser pelo menos 1!');
     Exit;
@@ -1795,7 +1797,103 @@ begin
 end;
 
 
+procedure TFormDispatcher.btnDefeitoConfirmarClick(Sender: TObject);
+var
+  // Contadores de peças produzidas (concluídas com sucesso)
+  cBaseAzul, cBaseVerde, cBaseCinza: integer;
+  cTampaAzul, cTampaVerde, cTampaCinza: integer;
+  // Contadores de defeituosos
+  dBaseAzul, dBaseVerde, dBaseCinza: integer;
+  dTampaAzul, dTampaVerde, dTampaCinza: integer;
+  i: integer;
+  linha, pecaStr, qtdStr: string;
+  pos1: integer;
+  qtd: integer;
+begin
+  // --- FASE 1: Contar peças produzidas a partir das tarefas concluídas ---
+  cBaseAzul  := 0; cBaseVerde  := 0; cBaseCinza  := 0;
+  cTampaAzul := 0; cTampaVerde := 0; cTampaCinza := 0;
 
+  for i := 0 to Length(ShopTasks) - 1 do
+  begin
+    // Só conta tarefas de Produção que já terminaram
+    if (ShopTasks[i].task_type = Type_Production) and
+       (ShopTasks[i].current_operation = Stage_Finished) then
+    begin
+      case ShopTasks[i].part_type of
+        Part_Base_Blue:  Inc(cBaseAzul);
+        Part_Base_Green: Inc(cBaseVerde);
+        Part_Base_Grey:  Inc(cBaseCinza);
+        Part_Lid_Blue:   Inc(cTampaAzul);
+        Part_Lid_Green:  Inc(cTampaVerde);
+        Part_Lid_Grey:   Inc(cTampaCinza);
+      end;
+    end;
+  end;
+
+  // --- FASE 2: Contar defeituosos a partir da lstDefeito ---
+  // Formato esperado de cada linha: "Produção | Tampa Verde | 2"
+  dBaseAzul  := 0; dBaseVerde  := 0; dBaseCinza  := 0;
+  dTampaAzul := 0; dTampaVerde := 0; dTampaCinza := 0;
+
+  for i := 0 to lstDefeito.Items.Count - 1 do
+  begin
+    linha := lstDefeito.Items[i];
+
+    // Extrai a parte depois do primeiro " | "
+    pos1 := Pos(' | ', linha);
+    if pos1 = 0 then Continue;
+    linha := Copy(linha, pos1 + 3, Length(linha));
+
+    // Extrai o nome da peça e a quantidade
+    pos1 := Pos(' | ', linha);
+    if pos1 = 0 then Continue;
+    pecaStr := Copy(linha, 1, pos1 - 1);
+    qtdStr  := Copy(linha, pos1 + 3, Length(linha));
+
+    qtd := StrToIntDef(qtdStr, 0);
+
+    if pecaStr = 'Base Azul'   then Inc(dBaseAzul,  qtd)
+    else if pecaStr = 'Base Verde'  then Inc(dBaseVerde, qtd)
+    else if pecaStr = 'Base Cinza'  then Inc(dBaseCinza, qtd)
+    else if pecaStr = 'Tampa Azul'  then Inc(dTampaAzul, qtd)
+    else if pecaStr = 'Tampa Verde' then Inc(dTampaVerde, qtd)
+    else if pecaStr = 'Tampa Cinza' then Inc(dTampaCinza, qtd);
+  end;
+
+  // --- FASE 3: Preencher o StringGrid (Total | OK = Total - Defeitos | Defeituoso) ---
+  // Base Azul (linha 1)
+  StringGrid1.Cells[1, 1] := IntToStr(cBaseAzul);
+  StringGrid1.Cells[3, 1] := IntToStr(dBaseAzul);
+  StringGrid1.Cells[2, 1] := IntToStr(cBaseAzul - dBaseAzul);
+
+  // Base Verde (linha 2)
+  StringGrid1.Cells[1, 2] := IntToStr(cBaseVerde);
+  StringGrid1.Cells[3, 2] := IntToStr(dBaseVerde);
+  StringGrid1.Cells[2, 2] := IntToStr(cBaseVerde - dBaseVerde);
+
+  // Base Cinza (linha 3)
+  StringGrid1.Cells[1, 3] := IntToStr(cBaseCinza);
+  StringGrid1.Cells[3, 3] := IntToStr(dBaseCinza);
+  StringGrid1.Cells[2, 3] := IntToStr(cBaseCinza - dBaseCinza);
+
+  // Tampa Azul (linha 4)
+  StringGrid1.Cells[1, 4] := IntToStr(cTampaAzul);
+  StringGrid1.Cells[3, 4] := IntToStr(dTampaAzul);
+  StringGrid1.Cells[2, 4] := IntToStr(cTampaAzul - dTampaAzul);
+
+  // Tampa Verde (linha 5)
+  StringGrid1.Cells[1, 5] := IntToStr(cTampaVerde);
+  StringGrid1.Cells[3, 5] := IntToStr(dTampaVerde);
+  StringGrid1.Cells[2, 5] := IntToStr(cTampaVerde - dTampaVerde);
+
+  // Tampa Cinza (linha 6)
+  StringGrid1.Cells[1, 6] := IntToStr(cTampaCinza);
+  StringGrid1.Cells[3, 6] := IntToStr(dTampaCinza);
+  StringGrid1.Cells[2, 6] := IntToStr(cTampaCinza - dTampaCinza);
+
+  LogMsg('QUALIDADE: Tabela de análise atualizada com ' + IntToStr(lstDefeito.Items.Count) + ' registo(s) de defeito.');
+end;
 
 
 //----------------------------- Fim código Botões -----------------------------
