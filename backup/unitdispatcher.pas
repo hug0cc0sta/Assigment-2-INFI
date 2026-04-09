@@ -234,7 +234,7 @@ type
   private
 
   public
-    procedure Dispatcher(var tasks:TArray_Task; var idx : integer; shopfloor: TResources );
+    procedure Dispatcher(var tasks:TArray_Task; {var idx : integer;} shopfloor: TResources );    //Comentado para fazer mais que uma tarefa ao mesmo tempo
     procedure Execute_Expedition_Order(var task:TTask; shopfloor: TResources );
 
     procedure Execute_Delivery_Order(var task:TTask; shopfloor: TResources ); //inbound dispacher
@@ -253,6 +253,8 @@ type
     procedure UpdateMachineTimers(shopfloor: TResources);
 
     procedure Atualizar_Custos; // Nova função de dinheiro
+
+    function Contar_Cinzentos_Em_Circulacao: integer; // Checa os cinzentos
 
   end;
 
@@ -330,7 +332,10 @@ var
   Inbound_MP_Azul  : integer = 0;
   Inbound_MP_Verde : integer = 0;
   Inbound_MP_Cinza : integer = 0;
-  Total_Defeitos   : integer = 0; // Esta vai ser usada pela grelha do Salvador mais tarde - NOTA
+  Total_Defeitos   : integer = 0; //- NOTA confirmar se está a funcionar
+
+  // Variável para evitar que duas tarefas roubem a mesma peça na entrada
+  Entrada_AR_Reclamada: Boolean = False;
 
 
 implementation
@@ -656,6 +661,9 @@ end;
 
 
 procedure TFormDispatcher.Timer1Timer(Sender: TObject);
+var
+  TodasConcluidas: boolean; // AS VARIÁVEIS TÊM DE FICAR AQUI EM CIMA!
+  i: integer;
 begin
   // RELÓGIO DA UI (Corre sempre, independentemente do PLC)
   labelRelogio.Caption := FormatDateTime('hh:nn:ss', Now);
@@ -666,28 +674,39 @@ begin
 
   BExecuteClick(Self);
 
-
   Atualizar_SCADA_Armazem; //Atualiza a cada segundo o armazem
-
   UpdateMachineTimers(ShopResources);// Atualiza os cronómetros
-
   Atualizar_Custos; //O Custo sobe em tempo real!
 
-  // Fechar a Fabrica qnd tarefas são todas concluidas
-  if (Length(ShopTasks) > 0) and (idx_Task_Executing >= Length(ShopTasks)) then
+  // --- NOVO TRAVÃO DE FIM DE TURNO MULTI-TAREFA ---
+  if Length(ShopTasks) > 0 then
   begin
-    Timer1.Enabled := False; // Pára o relógio da fábrica
+    // Vamos assumir que todas acabaram, e tentamos provar o contrário
+    TodasConcluidas := True;
 
-    LogMsg('SISTEMA: Plano Semanal concluído! A aguardar Validação de Qualidade.');
-    ShowMessage('Fim do Plano Semanal!' + sLineBreak + 'Por favor, valide a qualidade das peças produzidas no separador Análise de Dados.');
+    for i := 0 to Length(ShopTasks) - 1 do
+    begin
+      if ShopTasks[i].current_operation <> Stage_Finished then
+      begin
+        TodasConcluidas := False; // Encontrámos uma que ainda está a andar!
+        Break;
+      end;
+    end;
 
-    // Limpa a lista de tarefas para não entrar em loop
-    SetLength(ShopTasks, 0);
-    idx_Task_Executing := 0;
+    // Se confirmarmos que todas estão realmente no Stage_Finished:
+    if TodasConcluidas then
+    begin
+      Timer1.Enabled := False; // Pára o relógio da fábrica
 
-    // Muda o ecrã automaticamente para o separador da grelha (ajusta o nome do separador se for preciso)
-    PageControl1.ActivePage := TabSheet3; // Substitui TabSheet3 pelo nome do separador "Análise de Dados"
+      LogMsg('SISTEMA: Plano Semanal concluído! A aguardar Validação de Qualidade.');
+      ShowMessage('Fim do Plano Semanal!' + sLineBreak + 'Por favor, valide a qualidade das peças produzidas no separador Análise de Dados.');
 
+      // Limpa a lista de tarefas
+      SetLength(ShopTasks, 0);
+
+      // Muda o ecrã automaticamente para o separador da grelha
+      PageControl1.ActivePage := TabSheet3;
+    end;
   end;
 end;
 
@@ -697,6 +716,7 @@ function TFormDispatcher.GET_AR_Position (Part : integer; Warehouse : array of i
 var
     i : integer;
 begin
+  Result := 0;
   for i := 1 to Length(Warehouse)-1 do   //bug alterado de 0 para 1!
   begin
       if Warehouse[i] = Part then
@@ -721,7 +741,7 @@ begin
   UpdateResources(ShopResources);
   //Dispatcher executing per cycle.
   if(Length(ShopTasks)>0) then begin
-    Dispatcher(ShopTasks, idx_Task_Executing, ShopResources);
+    Dispatcher(ShopTasks, {idx_Task_Executing,} ShopResources);  //Multitarefas
   end;
 end;
 
@@ -736,7 +756,7 @@ end;
 
 //---------------------- CÓDIGO INTERNO - ALTERADO/FEITO -----------------------
 
-
+ {
 // Global Dispatcher - SIMPLEX
 procedure TFormDispatcher.Dispatcher(var tasks:TArray_Task; var idx : integer; shopfloor: TResources );
 begin
@@ -796,7 +816,28 @@ begin
 
     end;
 end;
+  }
 
+// Global Dispatcher - MULTI-TAREFA (Paralelismo)
+procedure TFormDispatcher.Dispatcher(var tasks:TArray_Task; shopfloor: TResources );
+var
+  i: integer;
+begin
+  // Percorre TODA a lista de tarefas, do início ao fim, a cada milissegundo!
+  for i := 0 to Length(tasks) - 1 do
+  begin
+    // Se esta tarefa específica já chegou ao fim da sua viagem, ignoramos e passamos à próxima
+    if tasks[i].current_operation = Stage_Finished then
+      Continue;
+
+    // Se ainda não acabou, tenta executá-la (os nossos "semáforos" lá dentro decidem se ela avança ou fica à espera)
+    case tasks[i].task_type of
+      Type_Expedition : Execute_Expedition_Order(tasks[i], shopfloor);
+      Type_Production : Execute_Production_Order(tasks[i], shopfloor);
+      Type_Delivery   : Execute_Delivery_Order(tasks[i], shopfloor);
+    end;
+  end;
+end;
 
 // Procedimento que executa uma ordem de Produção
 procedure TFormDispatcher.Execute_Production_Order(var task:TTask; shopfloor: TResources );
@@ -819,41 +860,52 @@ begin
 
         // --- FASE 1: Iniciar. Anunciar a ordem e passar para a procura ---
         Stage_To_Be_Started:
+
+        //semaforo
         begin
+           // 1. Regra dos Cinzentos
+           if ((part_type = Part_Base_Grey) or (part_type = Part_Lid_Grey)) and
+              (Contar_Cinzentos_Em_Circulacao > 0) then
+             Exit;
+
            LogMsg('PRODUÇÃO: Iniciar peça ' + IntToStr(part_type) + '. A procurar MP ' + IntToStr(raw_material_needed));
-           current_operation :=  Stage_GetPart;
+           current_operation := Stage_GetPart;
         end;
 
         // --- FASE 2: Procurar a MP no armazém ---
         Stage_GetPart :
         begin
-          if(shopfloor.AR_free) then  // Se o armazém estiver livre
+          if(shopfloor.AR_free) then
           begin
-            // Procura a posição da matéria-prima que definimos lá em cima
             part_position_AR := GET_AR_Position(raw_material_needed, WAREHOUSE_Parts);
-
             if( part_position_AR > 0 ) then
             begin
                LogMsg('PRODUÇÃO: MP encontrada na posição ' + IntToStr(part_position_AR));
+               // RESERVA DE SAÍDA! (-2 significa "A ser removida")
+               SET_AR_Position(part_position_AR, -2, WAREHOUSE_Parts);
                current_operation :=  Stage_Unload;
             end
             else
-            begin
-               // Fica aqui "preso" até que a matéria-prima dê entrada no armazém
                LogMsg('AVISO PRODUÇÃO: A aguardar MP ' + IntToStr(raw_material_needed) + ' no armazém...');
-            end;
           end;
         end;
 
         // --- FASE 3: Descarregar a MP ---
         Stage_Unload :
         begin
-          r := M_Unload(part_position_AR); // Pede para tirar a peça
-
-          if ( r = 1 ) then
+          if (ShopResources.AR_free) and (ShopResources.AR_Out_Part = 0) then
           begin
-             LogMsg('PRODUÇÃO: A descarregar MP...');
-             current_operation := Stage_Wait_AR_Out_Prod;
+            r := M_Unload(part_position_AR);
+            if ( r = 1 ) then
+            begin
+               ShopResources.AR_free := False; // Tranca o braço
+               LogMsg('PRODUÇÃO: A descarregar MP...');
+
+               // A peça saiu fisicamente! Agora sim, o lugar fica vazio (0)
+               SET_AR_Position(part_position_AR, 0, WAREHOUSE_Parts);
+
+               current_operation := Stage_Wait_AR_Out_Prod;
+            end;
           end;
         end;
 
@@ -871,16 +923,13 @@ begin
         // --- FASE 5: Enviar para a Máquina de Produção ---
         Stage_Req_Production:
         begin
-          // O "part_destination" (1 para Bases, 2 para Tampas) já foi preenchido pelo SimpleScheduler do professor
           r := M_Do_Production(part_destination);
-
           if (r = 1) then
           begin
              LogMsg('PRODUÇÃO: A processar na máquina. A aguardar regresso...');
-             // A peça já não está no armazém, podemos libertar o "nosso" registo virtual
-             SET_AR_Position(part_position_AR, 0, WAREHOUSE_Parts);
+             Inc(Em_Processamento);
 
-             Inc(Em_Processamento);//Incrementar Variável Global
+             // ATENÇÃO: APAGUEI O SET_AR_Position DAQUI PARA NÃO APAGAR PEÇAS NOVAS!
 
              current_operation := Stage_Wait_Prod_Return;
           end;
@@ -889,9 +938,10 @@ begin
         // --- FASE 6: Esperar que o Produto Final regresse à entrada ---
         Stage_Wait_Prod_Return:
         begin
-          // Alterado para '> 0'. Se há uma peça no tapete, é a nossa!
-          if (ShopResources.AR_In_Part > 0) then
+          // NOVA REGRA: A peça é da minha cor E ninguém a reclamou ainda?
+          if (ShopResources.AR_In_Part = part_type) and (not Entrada_AR_Reclamada) then
           begin
+             Entrada_AR_Reclamada := True; // Tira a senha! "Esta é minha!"
              LogMsg('PRODUÇÃO: Produto chegou à entrada! ID lido: ' + IntToStr(ShopResources.AR_In_Part));
              current_operation := Stage_Find_Free_AR;
           end;
@@ -911,12 +961,14 @@ begin
         // --- FASE 8: Carregar o Produto Final para o Armazém ---
         Stage_Load_AR:
         begin
-          if (shopfloor.AR_free) then
+          if (ShopResources.AR_free) then // Usa a global!
           begin
             r := M_Load(part_position_AR);
-
             if (r = 1) then
             begin
+               ShopResources.AR_free := False; // BLOQUEIA IMEDIATAMENTE O BRAÇO
+               Entrada_AR_Reclamada := False;  // Devolve a senha!
+
                LogMsg('PRODUÇÃO: Concluída! Guardado na pos ' + IntToStr(part_position_AR));
                SET_AR_Position(part_position_AR, part_type, WAREHOUSE_Parts);
 
@@ -966,37 +1018,52 @@ begin
 
         // To be Started
         Stage_To_Be_Started:
+
+        //SEMAFORO
         begin
-           current_operation :=  Stage_GetPart;
+           // 1. Regra dos Cinzentos
+           if ((Part_Type = Part_Base_Grey) or (Part_Type = Part_Lid_Grey)) and
+              (Contar_Cinzentos_Em_Circulacao > 0) then
+             Exit; // Sinal Vermelho! Sai e tenta no próximo segundo.
+
+           // Sinal Verde! Pode avançar.
+           current_operation := Stage_GetPart;
         end;
 
         // Getting a Position from the Warehouse
         Stage_GetPart :
         begin
-          if(shopfloor.AR_free) then  //AR is free
+          if(shopfloor.AR_free) then
           begin
             Part_Position_AR := GET_AR_Position(Part_Type, WAREHOUSE_Parts);
-            LogMsg(IntToStr(Part_Position_AR));
-
             if( Part_Position_AR > 0 ) then
             begin
+               // RESERVA DE SAÍDA (-2)
+               SET_AR_Position(Part_Position_AR, -2, WAREHOUSE_Parts);
                current_operation :=  Stage_Unload;
             end
             else
-            begin
                current_operation :=  Stage_GetPart;
-            end;
           end;
         end;
 
         // Request to unload that part
         Stage_Unload :
         begin
-          LogMsg('AR Unloading: ' + IntToStr(Part_Position_AR));
-          r := M_Unload(Part_Position_AR);
+          if (ShopResources.AR_free) and (ShopResources.AR_Out_Part = 0) then
+          begin
+            r := M_Unload(Part_Position_AR);
+            if ( r = 1 ) then
+            begin
+               ShopResources.AR_free := False;
+               LogMsg('AR Unloading: ' + IntToStr(Part_Position_AR));
 
-          if ( r = 1 ) then                                 //sucess
-             current_operation :=  Stage_To_AR_Out;
+               // Peça removida, posição a 0!
+               SET_AR_Position(Part_Position_AR, 0, WAREHOUSE_Parts);
+
+               current_operation := Stage_To_AR_Out;
+            end;
+          end;
         end;
 
         // Part is in the output conveyor
@@ -1017,7 +1084,7 @@ begin
         //Updated AR (removing the part from the position)
         Stage_Clear_Pos_AR :
         begin
-          SET_AR_Position(Part_Position_AR, 0, WAREHOUSE_Parts);
+          // ATENÇÃO: Apaguei o SET_AR_Position daqui!
           current_operation :=  Stage_Finished;
         end;
 
@@ -1042,9 +1109,14 @@ begin
 
         // --- FASE 1: Iniciar a Tarefa ---
         Stage_To_Be_Started:
+
+        //Semaforo
         begin
+           // 1. Regra dos Cinzentos
+           if (part_type = Part_Raw_Grey) and (Contar_Cinzentos_Em_Circulacao > 0) then
+             Exit;
+
            LogMsg('INBOUND: A iniciar a receção da peça tipo ' + IntToStr(part_type));
-           // Passa imediatamente para a próxima fase, onde vamos enviar o comando ao Factory IO
            current_operation := Stage_Req_Inbound;
         end;
 
@@ -1070,12 +1142,11 @@ begin
         // --- FASE 3: Esperar que a peça chegue ao Tapete de Entrada do Armazém ---
         Stage_Wait_Inbound_Tapete:
         begin
-          // A matéria-prima depois de recebida é encaminhada automaticamente para o tapete de entrada do armazém.
-          // Aqui verificamos ciclicamente se o sensor do tapete de entrada já detetou a nossa peça.
-          if (shopfloor.AR_In_Part = part_type) then
+          // NOVA REGRA: A peça é da minha cor E ninguém a reclamou ainda?
+          if (shopfloor.AR_In_Part = part_type) and (not Entrada_AR_Reclamada) then
           begin
+            Entrada_AR_Reclamada := True; // Tira a senha! "Esta é minha!"
             LogMsg('INBOUND: Peça chegou ao tapete do armazém. A procurar espaço livre...');
-            // A peça chegou fisicamente! Agora vamos procurar um lugar para a guardar
             current_operation := Stage_Find_Free_AR;
           end;
         end;
@@ -1083,49 +1154,39 @@ begin
         // --- FASE 4: Encontrar uma posição livre na nossa matriz mental ---
         Stage_Find_Free_AR:
         begin
-          // Aproveitamos a função do professor "GET_AR_Position".
-          // Ao pedir a peça "0", a função vai procurar a primeira célula vazia (com valor 0) no WAREHOUSE_Parts.
           part_position_AR := GET_AR_Position(0, WAREHOUSE_Parts);
-
-          // Como as posições do armazém vão de 1 a 54, se for > 0 significa que encontrou espaço.
           if (part_position_AR > 0) then
           begin
              LogMsg('INBOUND: Encontrada posição livre -> ' + IntToStr(part_position_AR));
-             // Já temos um alvo. Vamos dar ordem ao braço do armazém para ir buscar a peça.
+
+             // RESERVA DE ENTRADA! O lugar agora é -1 (A Aguardar Preenchimento)
+             SET_AR_Position(part_position_AR, -1, WAREHOUSE_Parts);
+
              current_operation := Stage_Load_AR;
           end
           else
-          begin
-             // Se part_position_AR for 0, o armazém está totalmente cheio.
              LogMsg('ERRO INBOUND: Armazém cheio! Não é possível guardar a peça.');
-             // Por agora, o código fica bloqueado nesta fase até que se liberte espaço.
-          end;
         end;
 
         // --- FASE 5: Carregar a peça para o Armazém ---
         Stage_Load_AR:
         begin
-          // O Armazém só executa 1 comando de cada vez. Temos de garantir que está livre.
-          if (shopfloor.AR_free) then
+          if (ShopResources.AR_free) then
           begin
-            // O comando M_Load carrega a peça do tapete de entrada e coloca-a na posição definida.
             r := M_Load(part_position_AR);
-
-            // Se o comando foi executado corretamente (retornou 1)
             if (r = 1) then
             begin
+               ShopResources.AR_free := False;
+               Entrada_AR_Reclamada := False;
                LogMsg('INBOUND: Peça guardada na posição ' + IntToStr(part_position_AR));
-               // Guardamos a informação de que a posição deixou de estar livre e tem a nova peça
+
+               // Agora sim, substitui a reserva (-1) pela peça verdadeira!
                SET_AR_Position(part_position_AR, part_type, WAREHOUSE_Parts);
 
-               Inc(Total_Recebidas);  //Incrementar Variável Global
-
-               // --- NOVA LÓGICA DE CUSTOS: Registar a cor ---
+               Inc(Total_Recebidas);
                if part_type = Part_Raw_Blue then Inc(Inbound_MP_Azul)
                else if part_type = Part_Raw_Green then Inc(Inbound_MP_Verde)
                else if part_type = Part_Raw_Grey then Inc(Inbound_MP_Cinza);
-
-               // A ordem de Aprovisionamento está oficialmente concluída!
                current_operation := Stage_Finished;
             end;
           end;
@@ -1407,7 +1468,7 @@ begin
      lblTempoEsperaAR.Caption := '0.0 s';
 end;
 
-//FUNÇÃO CUSTOS
+//PROCEDURE CUSTOS
 procedure TFormDispatcher.Atualizar_Custos;
 var
   Custo_Materias, Custo_Expedicoes, Custo_Maquinas, Custo_Espera, Custo_Defeitos: Double;
@@ -1433,6 +1494,29 @@ begin
 
   // 7. Imprimir no ecrã com as 2 casas decimais habituais dos Euros
   lblCustoTotal.Caption := 'Custo Total: ' + FormatFloat('0.00', Custo_Total) + ' €';
+end;
+
+function TFormDispatcher.Contar_Cinzentos_Em_Circulacao: integer;
+var
+  i, cont: integer;
+begin
+  cont := 0;
+  for i := 0 to Length(ShopTasks) - 1 do
+  begin
+    // A peça desta tarefa é da família Cinzenta?
+    if (ShopTasks[i].part_type = Part_Raw_Grey) or
+       (ShopTasks[i].part_type = Part_Base_Grey) or
+       (ShopTasks[i].part_type = Part_Lid_Grey) then
+    begin
+      // Se não está "Para Iniciar", nem "À procura", nem "Terminada",
+      // então significa que está FISICAMENTE a circular na fábrica!
+      if not (ShopTasks[i].current_operation in [Stage_To_Be_Started, Stage_GetPart, Stage_Finished]) then
+      begin
+        Inc(cont);
+      end;
+    end;
+  end;
+  Result := cont;
 end;
 
 //----------------------------- Fim código interno -----------------------------
