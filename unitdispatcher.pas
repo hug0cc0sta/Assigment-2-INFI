@@ -1226,11 +1226,10 @@ begin
   begin
     ordem := Production_Orders[i];
 
-    // NOVA LÓGICA: Se for uma peça da família VERDE (Matéria, Base ou Tampa)
+    // NOVA LÓGICA: Apenas Expedições de peças Verdes (Bases ou Tampas) vão para o topo!
     // Puxamos todas as tarefas associadas a elas para o topo!
-    if (ordem.part_type = Part_Base_Green) or
-       (ordem.part_type = Part_Lid_Green) or
-       (ordem.part_type = Part_Raw_Green) then
+    if (ordem.order_type = Type_Expedition) and
+       ((ordem.part_type = Part_Base_Green) or (ordem.part_type = Part_Lid_Green)) then
     begin
       SetLength(ListaVerdes, indexVerdes + 1);
       ListaVerdes[indexVerdes] := ordem;

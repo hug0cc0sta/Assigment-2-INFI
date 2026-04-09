@@ -1508,9 +1508,10 @@ begin
        (ShopTasks[i].part_type = Part_Base_Grey) or
        (ShopTasks[i].part_type = Part_Lid_Grey) then
     begin
-      // Se não está "Para Iniciar", nem "À procura", nem "Terminada",
-      // então significa que está FISICAMENTE a circular na fábrica!
-      if not (ShopTasks[i].current_operation in [Stage_To_Be_Started, Stage_GetPart, Stage_Finished]) then
+      // NOVA REGRA: Se não está "Por Iniciar" e não está "Terminada",
+      // então JÁ ARRANCOU e está algures ativa no sistema!
+      if (ShopTasks[i].current_operation <> Stage_To_Be_Started) and
+         (ShopTasks[i].current_operation <> Stage_Finished) then
       begin
         Inc(cont);
       end;
