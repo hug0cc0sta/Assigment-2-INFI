@@ -141,6 +141,7 @@ type
     Label34: TLabel;
     Label35: TLabel;
     Label40: TLabel;
+    lblCustoTotal: TLabel;
     lblTempoInbound: TLabel;
     Label36: TLabel;
     Label37: TLabel;
@@ -251,6 +252,8 @@ type
 
     procedure UpdateMachineTimers(shopfloor: TResources);
 
+    procedure Atualizar_Custos; // Nova função de dinheiro
+
   end;
 
 const
@@ -312,6 +315,12 @@ var
   AR_Wait_Total   : Double;      // Soma de todos os tempos de espera (segundos)
   AR_Wait_Count   : Integer;     // Número de episódios de espera registados
   AR_Part_Waiting : Boolean;     // Flag: havia peça à espera no ciclo anterior?
+
+  // --- Variáveis para Custos ---
+  Inbound_MP_Azul  : integer = 0;
+  Inbound_MP_Verde : integer = 0;
+  Inbound_MP_Cinza : integer = 0;
+  Total_Defeitos   : integer = 0; // Esta vai ser usada pela grelha do Salvador mais tarde - NOTA
 
 
 implementation
@@ -651,6 +660,8 @@ begin
   Atualizar_SCADA_Armazem; //Atualiza a cada segundo o armazem
 
   UpdateMachineTimers(ShopResources);// Atualiza os cronómetros
+
+  Atualizar_Custos; //O Custo sobe em tempo real!
 
   // Fechar a Fabrica qnd tarefas são todas concluidas
   if (Length(ShopTasks) > 0) and (idx_Task_Executing >= Length(ShopTasks)) then
@@ -1088,6 +1099,11 @@ begin
 
                Inc(Total_Recebidas);  //Incrementar Variável Global
 
+               // --- NOVA LÓGICA DE CUSTOS: Registar a cor ---
+               if part_type = Part_Raw_Blue then Inc(Inbound_MP_Azul)
+               else if part_type = Part_Raw_Green then Inc(Inbound_MP_Verde)
+               else if part_type = Part_Raw_Grey then Inc(Inbound_MP_Cinza);
+
                // A ordem de Aprovisionamento está oficialmente concluída!
                current_operation := Stage_Finished;
             end;
@@ -1363,6 +1379,33 @@ begin
   //// lblContagemEsperaAR.Caption := IntToStr(AR_Wait_Count) + ' vezes';
 end;
 
+//FUNÇÃO CUSTOS
+procedure TFormDispatcher.Atualizar_Custos;
+var
+  Custo_Materias, Custo_Expedicoes, Custo_Maquinas, Custo_Espera, Custo_Defeitos: Double;
+  Custo_Total: Double;
+begin
+  // 1. Custos das Matérias-Primas (Azul e Cinza = 1€, Verde = 4€)
+  Custo_Materias := (Inbound_MP_Azul * 1.0) + (Inbound_MP_Verde * 4.0) + (Inbound_MP_Cinza * 1.0);
+
+  // 2. Custo das Expedições (3€ cada)
+  Custo_Expedicoes := Total_Expedidas * 3.0;
+
+  // 3. Custo do Tempo de Máquina (2€ por segundo nas Células 1 e 2)
+  Custo_Maquinas := (Cell1_Op_Total + Cell2_Op_Total) * 2.0;
+
+  // 4. Custo da Espera no Armazém (6€ por segundo no gargalo)
+  Custo_Espera := AR_Wait_Total * 6.0;
+
+  // 5. Custo de Defeitos (4€ por peça - valor atualizado via Análise de Dados)
+  Custo_Defeitos := Total_Defeitos * 4.0;
+
+  // 6. O Somatório Final
+  Custo_Total := Custo_Materias + Custo_Expedicoes + Custo_Maquinas + Custo_Espera + Custo_Defeitos;
+
+  // 7. Imprimir no ecrã com as 2 casas decimais habituais dos Euros
+  lblCustoTotal.Caption := 'Custo Total: ' + FormatFloat('0.00', Custo_Total) + ' €';
+end;
 
 //----------------------------- Fim código interno -----------------------------
 
