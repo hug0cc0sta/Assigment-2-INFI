@@ -686,7 +686,7 @@ begin
     idx_Task_Executing := 0;
 
     // Muda o ecrã automaticamente para o separador da grelha (ajusta o nome do separador se for preciso)
-    PageControl1.ActivePage := TabSheet3; // Substitui TabSheet3 pelo nome do separador "Análise de Dados"
+    PageControl1.ActivePage := TabSheet2; // Substitui TabSheet2 pelo nome do separador "Análise de Dados"
 
   end;
 end;
@@ -1255,11 +1255,8 @@ end;
 
 
 // ============================================================================
-// MÉTRICA 3.5 + 3.6 — UpdateMachineTimers (Lógica + UI Integrada) DEPOIS TENHO DE MUDAR ISTO E APGR COMENTÁRIOS ////
-// Chamada a cada tick do Timer1 (1 segundo).
-// Deteta transições de estado, acumula tempos e atualiza o Dashboard visual.
+// MÉTRICA 3.5 + 3.6 — UpdateMachineTimers (Lógica Tempo Real + UI Integrada)
 // ============================================================================
-
 procedure TFormDispatcher.UpdateMachineTimers(shopfloor: TResources);
 var
   Now_T      : TDateTime;
@@ -1276,97 +1273,107 @@ begin
   // --------------------------------------------------------------------------
   // 3.5.A — ARMAZÉM AUTOMÁTICO (AR)
   // --------------------------------------------------------------------------
-  if (not shopfloor.AR_free) and (not AR_Was_Busy) then
+  if not shopfloor.AR_free then
   begin
-    AR_Op_Start := Now_T;
-    AR_Was_Busy := True;
-    LogMsg('MÉTRICAS [AR]: Início de operação registado.');
+    if not AR_Was_Busy then
+    begin
+      AR_Op_Start := Now_T;
+      AR_Was_Busy := True;
+    end
+    else
+    begin
+      // Se já estava ocupado, soma o 1 segundo que passou e avança a marca temporal
+      ElapsedSec := SecsElapsed(AR_Op_Start, Now_T);
+      AR_Op_Total := AR_Op_Total + ElapsedSec;
+      AR_Op_Start := Now_T;
+    end;
   end
-  else if shopfloor.AR_free and AR_Was_Busy then
+  else if AR_Was_Busy then
   begin
-    ElapsedSec  := SecsElapsed(AR_Op_Start, Now_T);
+    ElapsedSec := SecsElapsed(AR_Op_Start, Now_T);
     AR_Op_Total := AR_Op_Total + ElapsedSec;
     AR_Was_Busy := False;
-    LogMsg('MÉTRICAS [AR]: Operação concluída. Duração: ' + FormatFloat('0.0', ElapsedSec) + 's');
   end;
 
-  // Atualiza a UI do Armazém
-  ////if AR_Was_Busy then shpStatusAR.Brush.Color := clLime
-  ////else shpStatusAR.Brush.Color := clSilver;
-  if AR_Wait_Count > 0 then
-     lblTempoEsperaAR.Caption := FormatFloat('0.0', AR_Wait_Total / AR_Wait_Count) + ' s (média)'
-  else
-     lblTempoEsperaAR.Caption := '0.0 s (média)';
-
+  lblTempoAR.Caption := FormatFloat('0.0', AR_Op_Total) + ' s';
 
   // --------------------------------------------------------------------------
   // 3.5.B — INBOUND
   // --------------------------------------------------------------------------
-  if (not shopfloor.Inbound_free) and (not Inbound_Was_Busy) then
+  if not shopfloor.Inbound_free then
   begin
-    Inbound_Op_Start := Now_T;
-    Inbound_Was_Busy := True;
-    LogMsg('MÉTRICAS [INBOUND]: Início de operação registado.');
+    if not Inbound_Was_Busy then
+    begin
+      Inbound_Op_Start := Now_T;
+      Inbound_Was_Busy := True;
+    end
+    else
+    begin
+      ElapsedSec := SecsElapsed(Inbound_Op_Start, Now_T);
+      Inbound_Op_Total := Inbound_Op_Total + ElapsedSec;
+      Inbound_Op_Start := Now_T;
+    end;
   end
-  else if shopfloor.Inbound_free and Inbound_Was_Busy then
+  else if Inbound_Was_Busy then
   begin
-    ElapsedSec       := SecsElapsed(Inbound_Op_Start, Now_T);
+    ElapsedSec := SecsElapsed(Inbound_Op_Start, Now_T);
     Inbound_Op_Total := Inbound_Op_Total + ElapsedSec;
     Inbound_Was_Busy := False;
-    LogMsg('MÉTRICAS [INBOUND]: Operação concluída. Duração: ' + FormatFloat('0.0', ElapsedSec) + 's');
   end;
 
-  // Atualiza a UI do Inbound
-  ////if Inbound_Was_Busy then shpStatusInbound.Brush.Color := clLime
-  ////else shpStatusInbound.Brush.Color := clSilver;
   lblTempoInbound.Caption := FormatFloat('0.0', Inbound_Op_Total) + ' s';
-
 
   // --------------------------------------------------------------------------
   // 3.5.C — CÉLULA 1 (Robot 1)
   // --------------------------------------------------------------------------
-  if (shopfloor.Robot_1_Part > 0) and (not Cell1_Was_Busy) then
+  if shopfloor.Robot_1_Part > 0 then
   begin
-    Cell1_Op_Start := Now_T;
-    Cell1_Was_Busy := True;
-    LogMsg('MÉTRICAS [CÉLULA 1]: Início de operação registado.');
+    if not Cell1_Was_Busy then
+    begin
+      Cell1_Op_Start := Now_T;
+      Cell1_Was_Busy := True;
+    end
+    else
+    begin
+      ElapsedSec := SecsElapsed(Cell1_Op_Start, Now_T);
+      Cell1_Op_Total := Cell1_Op_Total + ElapsedSec;
+      Cell1_Op_Start := Now_T;
+    end;
   end
-  else if (shopfloor.Robot_1_Part = 0) and Cell1_Was_Busy then
+  else if Cell1_Was_Busy then
   begin
-    ElapsedSec     := SecsElapsed(Cell1_Op_Start, Now_T);
+    ElapsedSec := SecsElapsed(Cell1_Op_Start, Now_T);
     Cell1_Op_Total := Cell1_Op_Total + ElapsedSec;
     Cell1_Was_Busy := False;
-    LogMsg('MÉTRICAS [CÉLULA 1]: Operação concluída. Duração: ' + FormatFloat('0.0', ElapsedSec) + 's');
   end;
 
-  // Atualiza a UI da Célula 1
-  ////if Cell1_Was_Busy then shpStatusCell1.Brush.Color := clLime
-  ////else shpStatusCell1.Brush.Color := clSilver;
   lblTempoCell1.Caption := FormatFloat('0.0', Cell1_Op_Total) + ' s';
-
 
   // --------------------------------------------------------------------------
   // 3.5.D — CÉLULA 2 (Robot 2)
   // --------------------------------------------------------------------------
-  if (shopfloor.Robot_2_Part > 0) and (not Cell2_Was_Busy) then
+  if shopfloor.Robot_2_Part > 0 then
   begin
-    Cell2_Op_Start := Now_T;
-    Cell2_Was_Busy := True;
-    LogMsg('MÉTRICAS [CÉLULA 2]: Início de operação registado.');
+    if not Cell2_Was_Busy then
+    begin
+      Cell2_Op_Start := Now_T;
+      Cell2_Was_Busy := True;
+    end
+    else
+    begin
+      ElapsedSec := SecsElapsed(Cell2_Op_Start, Now_T);
+      Cell2_Op_Total := Cell2_Op_Total + ElapsedSec;
+      Cell2_Op_Start := Now_T;
+    end;
   end
-  else if (shopfloor.Robot_2_Part = 0) and Cell2_Was_Busy then
+  else if Cell2_Was_Busy then
   begin
-    ElapsedSec     := SecsElapsed(Cell2_Op_Start, Now_T);
+    ElapsedSec := SecsElapsed(Cell2_Op_Start, Now_T);
     Cell2_Op_Total := Cell2_Op_Total + ElapsedSec;
     Cell2_Was_Busy := False;
-    LogMsg('MÉTRICAS [CÉLULA 2]: Operação concluída. Duração: ' + FormatFloat('0.0', ElapsedSec) + 's');
   end;
 
-  // Atualiza a UI da Célula 2
-  ////if Cell2_Was_Busy then shpStatusCell2.Brush.Color := clLime
-  ////else shpStatusCell2.Brush.Color := clSilver;
   lblTempoCell2.Caption := FormatFloat('0.0', Cell2_Op_Total) + ' s';
-
 
   // --------------------------------------------------------------------------
   // 3.6 — ESPERA À ENTRADA DO ARMAZÉM (Gargalo)
@@ -1377,27 +1384,27 @@ begin
     begin
       AR_Wait_Start   := Now_T;
       AR_Part_Waiting := True;
-      LogMsg('MÉTRICAS [ESPERA AR]: Peça aguarda à entrada (AR ocupado).');
-    end;
-  end
-  else
-  begin
-    if AR_Part_Waiting then
+      Inc(AR_Wait_Count); // Regista que iniciou um novo episódio de espera
+    end
+    else
     begin
       ElapsedSec      := SecsElapsed(AR_Wait_Start, Now_T);
       AR_Wait_Total   := AR_Wait_Total + ElapsedSec;
-      Inc(AR_Wait_Count);
-      AR_Part_Waiting := False;
-      LogMsg('MÉTRICAS [ESPERA AR]: Espera terminada. Duração: ' + FormatFloat('0.0', ElapsedSec) + 's');
+      AR_Wait_Start   := Now_T;
     end;
+  end
+  else if AR_Part_Waiting then
+  begin
+    ElapsedSec      := SecsElapsed(AR_Wait_Start, Now_T);
+    AR_Wait_Total   := AR_Wait_Total + ElapsedSec;
+    AR_Part_Waiting := False;
   end;
 
-  // Atualiza a UI da Espera
-  ////if AR_Part_Waiting then shpStatusEsperaAR.Brush.Color := clRed // Alerta vermelho!
-  ////else shpStatusEsperaAR.Brush.Color := clSilver;
-
-  lblTempoEsperaAR.Caption    := FormatFloat('0.0', AR_Wait_Total) + ' s';
-  //// lblContagemEsperaAR.Caption := IntToStr(AR_Wait_Count) + ' vezes';
+  // Calculo da média em tempo real
+  if AR_Wait_Count > 0 then
+     lblTempoEsperaAR.Caption := FormatFloat('0.0', AR_Wait_Total / AR_Wait_Count) + ' s'
+  else
+     lblTempoEsperaAR.Caption := '0.0 s';
 end;
 
 //FUNÇÃO CUSTOS
@@ -1942,6 +1949,9 @@ begin
   StringGrid1.Cells[1, 6] := IntToStr(cTampaCinza);
   StringGrid1.Cells[3, 6] := IntToStr(dTampaCinza);
   StringGrid1.Cells[2, 6] := IntToStr(cTampaCinza - dTampaCinza);
+
+  // --- FASE 4: Ligar à Monitorização de Custos ---
+  Total_Defeitos := dBaseAzul + dBaseVerde + dBaseCinza + dTampaAzul + dTampaVerde + dTampaCinza;
 
   LogMsg('QUALIDADE: Tabela de análise atualizada com ' + IntToStr(lstDefeito.Items.Count) + ' registo(s) de defeito.');
 end;
