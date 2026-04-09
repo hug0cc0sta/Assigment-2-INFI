@@ -1,7 +1,7 @@
 object FormDispatcher: TFormDispatcher
-  Left = 315
+  Left = 339
   Height = 798
-  Top = 246
+  Top = 134
   Width = 1601
   Caption = 'Dispatcher'
   ClientHeight = 798
@@ -15,11 +15,11 @@ object FormDispatcher: TFormDispatcher
     Height = 668
     Top = 100
     Width = 1601
-    ActivePage = TabSheet1
+    ActivePage = TabSheet2
     Align = alClient
     Font.Style = [fsBold]
     ParentFont = False
-    TabIndex = 1
+    TabIndex = 2
     TabOrder = 0
     object TabSheet5: TTabSheet
       Caption = 'Info'
@@ -1866,7 +1866,7 @@ object FormDispatcher: TFormDispatcher
         object PageControlTarefas: TPageControl
           Left = 8
           Height = 508
-          Top = 9
+          Top = 8
           Width = 322
           ActivePage = TabSheet6
           TabIndex = 0
@@ -4396,26 +4396,24 @@ object FormDispatcher: TFormDispatcher
         end
       end
       object StringGrid1: TStringGrid
-        Left = 24
+        Left = 48
         Height = 192
-        Top = 72
+        Top = 376
         Width = 560
         AutoFillColumns = True
         BorderStyle = bsNone
-        ColCount = 6
+        ColCount = 4
         Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goEditing, goRowSelect, goSmoothScroll]
         RowCount = 7
         TabOrder = 1
         ColWidths = (
           115
-          89
-          89
-          89
-          89
-          89
+          149
+          148
+          148
         )
         Cells = (
-          11
+          9
           0
           1
           'Base Azul'
@@ -4436,64 +4434,17 @@ object FormDispatcher: TFormDispatcher
           'Tampa Cinza'
           1
           0
-          'Peças'
+          'Total Produzido'
           2
           0
-          'Tipo'
-          3
-          0
-          'Total Produzido'
-          4
-          0
           'OK'
-          5
+          3
           0
           'Defeituoso'
         )
       end
-      object Panel1: TPanel
-        Left = 24
-        Height = 60
-        Top = 272
-        Width = 170
-        ClientHeight = 60
-        ClientWidth = 170
-        ParentBackground = False
-        TabOrder = 2
-        object Label33: TLabel
-          AnchorSideLeft.Control = Panel1
-          AnchorSideLeft.Side = asrCenter
-          AnchorSideTop.Control = Panel1
-          AnchorSideTop.Side = asrCenter
-          AnchorSideRight.Side = asrCenter
-          AnchorSideBottom.Side = asrCenter
-          Left = 21
-          Height = 20
-          Top = 20
-          Width = 129
-          Align = alCustom
-          Alignment = taCenter
-          Caption = 'Indica Selecionado'
-        end
-      end
-      object Button1: TButton
-        Left = 224
-        Height = 60
-        Top = 272
-        Width = 170
-        Caption = 'Defeituoso +1'
-        TabOrder = 3
-      end
-      object Button2: TButton
-        Left = 414
-        Height = 60
-        Top = 272
-        Width = 170
-        Caption = 'Defeituoso -1'
-        TabOrder = 4
-      end
       object GroupBox1: TGroupBox
-        Left = 608
+        Left = 648
         Height = 170
         Top = 80
         Width = 490
@@ -4501,7 +4452,7 @@ object FormDispatcher: TFormDispatcher
         ClientHeight = 145
         ClientWidth = 486
         ParentBackground = False
-        TabOrder = 5
+        TabOrder = 2
         object lblArmazemMatAzul: TLabel
           Left = 40
           Height = 20
@@ -4567,7 +4518,7 @@ object FormDispatcher: TFormDispatcher
         end
       end
       object GroupBox5: TGroupBox
-        Left = 608
+        Left = 648
         Height = 170
         Top = 272
         Width = 208
@@ -4575,7 +4526,7 @@ object FormDispatcher: TFormDispatcher
         ClientHeight = 145
         ClientWidth = 204
         ParentBackground = False
-        TabOrder = 6
+        TabOrder = 3
         object lblTotalRecebidas: TLabel
           Left = 10
           Height = 20
@@ -4599,15 +4550,15 @@ object FormDispatcher: TFormDispatcher
         end
       end
       object GroupBox6: TGroupBox
-        Left = 976
-        Height = 280
-        Top = 256
-        Width = 384
+        Left = 880
+        Height = 240
+        Top = 264
+        Width = 312
         Caption = 'Tempos'
-        ClientHeight = 255
-        ClientWidth = 380
+        ClientHeight = 215
+        ClientWidth = 308
         ParentBackground = False
-        TabOrder = 7
+        TabOrder = 4
         object lblTempoAR: TLabel
           Left = 248
           Height = 20
@@ -4677,6 +4628,97 @@ object FormDispatcher: TFormDispatcher
           Top = 176
           Width = 29
           Caption = '0.0s'
+        end
+      end
+      object GroupBox7: TGroupBox
+        Left = 16
+        Height = 304
+        Top = 56
+        Width = 608
+        Caption = 'Defeitos'
+        ClientHeight = 279
+        ClientWidth = 604
+        ParentBackground = False
+        TabOrder = 5
+        object Label33: TLabel
+          Left = 18
+          Height = 20
+          Top = 16
+          Width = 35
+          Caption = 'Tipo:'
+        end
+        object Label35: TLabel
+          Left = 18
+          Height = 20
+          Top = 56
+          Width = 24
+          Caption = 'Cor'
+        end
+        object Label40: TLabel
+          Left = 18
+          Height = 20
+          Top = 96
+          Width = 81
+          Caption = 'Quantidade'
+        end
+        object cbTipoDefeito: TComboBox
+          Left = 127
+          Height = 28
+          Top = 16
+          Width = 131
+          ItemHeight = 20
+          Items.Strings = (
+            'Base'
+            'Tampa'
+          )
+          TabOrder = 0
+          Text = 'cbTipoDefeito'
+        end
+        object cbCorDefeito: TComboBox
+          Left = 128
+          Height = 28
+          Top = 56
+          Width = 130
+          ItemHeight = 20
+          Items.Strings = (
+            'Verde'
+            'Azul'
+            'Cinza'
+          )
+          TabOrder = 1
+          Text = 'cbCorDefeito'
+        end
+        object edtQuantidadeDefeito: TEdit
+          Left = 127
+          Height = 28
+          Top = 96
+          Width = 128
+          TabOrder = 2
+          Text = 'edtQuantidadeDefeito'
+        end
+        object lstDefeito: TListBox
+          Left = 280
+          Height = 216
+          Top = 0
+          Width = 306
+          ItemHeight = 0
+          TabOrder = 3
+        end
+        object btnAdicionarDefeito: TButton
+          Left = 22
+          Height = 54
+          Top = 142
+          Width = 105
+          Caption = 'Adicionar'
+          TabOrder = 4
+        end
+        object btnDefeitosLimpar: TButton
+          Left = 144
+          Height = 54
+          Top = 142
+          Width = 105
+          Caption = 'Limpar Linha'
+          TabOrder = 5
         end
       end
     end

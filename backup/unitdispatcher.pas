@@ -87,20 +87,24 @@ type
     btnExecutar: TButton;
     btnLimpar: TButton;
     btnExtrairRelatorio: TButton;
-    Button1: TButton;
-    Button2: TButton;
+    btnAdicionarDefeito: TButton;
+    btnDefeitosLimpar: TButton;
     cbCorProd: TComboBox;
     cbCorExp: TComboBox;
     cbProduto: TComboBox;
     cbCorAprov: TComboBox;
     cbProdProd: TComboBox;
     cbProdExp: TComboBox;
+    cbTipoDefeito: TComboBox;
+    cbCorDefeito: TComboBox;
+    edtQuantidadeDefeito: TEdit;
     GroupBox1: TGroupBox;
     GroupBox2: TGroupBox;
     GroupBox3: TGroupBox;
     GroupBox4: TGroupBox;
     GroupBox5: TGroupBox;
     GroupBox6: TGroupBox;
+    GroupBox7: TGroupBox;
     Image1: TImage;
     Image2: TImage;
     Image3: TImage;
@@ -134,6 +138,8 @@ type
     Label32: TLabel;
     Label33: TLabel;
     Label34: TLabel;
+    Label35: TLabel;
+    Label40: TLabel;
     lblTempoInbound: TLabel;
     Label36: TLabel;
     Label37: TLabel;
@@ -164,6 +170,7 @@ type
     Label7: TLabel;
     Label8: TLabel;
     Label9: TLabel;
+    lstDefeito: TListBox;
     lstPlano: TListBox;
     memLogger: TMemo;
     PageControl1: TPageControl;
@@ -171,7 +178,6 @@ type
     Footer: TPanel;
     PageControl2: TPageControl;
     PageControlTarefas: TPageControl;
-    Panel1: TPanel;
     panelProducao: TPanel;
     panelArmazem: TPanel;
     pnlRelogio: TPanel;
@@ -220,6 +226,8 @@ type
     procedure btnPLCClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
+    procedure btnAdicionarDefeitoClick(Sender: TObject);
+    procedure btnDefeitosLimparClick(Sender: TObject);
   private
 
   public
@@ -1539,7 +1547,6 @@ begin
   LogMsg('SISTEMA: Adicionado plano -> Aprovisionamento de ' + IntToStr(spnQtdAprov.Value) + 'x Matéria ' + cbCorAprov.Text);
 end;
 
-
 //Botão Adicionar Produção
 procedure TFormDispatcher.btnAddProdClick(Sender: TObject);
 begin
@@ -1563,7 +1570,6 @@ begin
   // 4. Regista a ação no nosso Logger
   LogMsg('SISTEMA: Adicionado plano -> Produção de ' + IntToStr(spnQtdProd.Value) + 'x ' + cbProdProd.Text + ' ' + cbCorProd.Text);
 end;
-
 
 //Botão Adicionar Expedição
 procedure TFormDispatcher.btnAddExpClick(Sender: TObject);
@@ -1730,6 +1736,65 @@ begin
     ShowMessage('Erro: Não foi possível guardar o ficheiro. Verifique as permissões da pasta.');
   end;
 end;
+
+
+//******************************************************************************
+//Botões na Tab de Monitorização
+//******************************************************************************
+
+//Botão Limpar
+procedure TFormDispatcher.btnDefeitosLimparClick(Sender: TObject);
+var
+  IndexSelecionado: integer;
+begin
+  // 1. Descobrir qual é a linha que o utilizador selecionou na ListBox
+  IndexSelecionado := lstDefeito.ItemIndex;
+
+  // 2. Verificar se há realmente algo selecionado (-1 significa que não há nada clicado)
+  if IndexSelecionado = -1 then
+  begin
+    // Nuance: Se a lista estiver totalmente vazia, damos um aviso diferente
+    if lstPlano.Items.Count = 0 then
+      ShowMessage('O plano já está vazio. Não há registos para limpar!')
+    else
+      ShowMessage('Atenção: Por favor, clique no registo que deseja apagar antes de carregar em Limpar.');
+
+    Exit; // Sai do procedimento para não tentar apagar o vazio (o que daria erro fatal no programa)
+  end;
+
+  // 3. Nuance: Registar no log da fábrica o que estamos a remover antes de o apagar de vez
+  LogMsg('SISTEMA: Registo removido do plano -> ' + lstPlano.Items[IndexSelecionado]);
+
+  // 4. Apagar efetivamente a linha selecionada da ListBox
+  lstDefeito.Items.Delete(IndexSelecionado);
+end;
+
+//Botão Adicionar Defeito
+procedure TFormDispatcher.btnAdicionarDefeitoClick(Sender: TObject);
+begin
+  // 1. Verifica se o utilizador escolheu o produto e a cor
+  if (cbTipoDefeito.ItemIndex = -1) or (cbCorDefeito.ItemIndex = -1) then
+  begin
+    ShowMessage('Por favor, selecione o Tipo e a Cor a produzir!');
+    Exit;
+  end;
+
+  // 2. Verifica se a quantidade faz sentido
+  if StrToInt(edtQuantidadeDefeito.Text) <= 0 then
+  begin
+    ShowMessage('A quantidade tem de ser pelo menos 1!');
+    Exit;
+  end;
+
+  // 3. Junta tudo e envia para a ListBox no formato padrão
+  lstDefeito.Items.Add('Produção | ' + cbTipoDefeito.Text + ' ' + cbCorDefeito.Text + ' | ' + edtQuantidadeDefeito.Text);
+
+  // 4. Regista a ação no nosso Logger - TIRAR ???
+  ////////////////LogMsg('SISTEMA: Adicionado plano -> Produção de ' + IntToStr(spnQtdProd.Value) + 'x ' + cbProdProd.Text + ' ' + cbCorProd.Text);
+end;
+
+
+
 
 
 //----------------------------- Fim código Botões -----------------------------
