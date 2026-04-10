@@ -711,19 +711,45 @@ begin
 end;
 
 
-// get the first position (cell) in AR that contains the "Part"
+// get the first position (cell) in AR that contains the "Part" (Procura em Leque Otimizada)
 function TFormDispatcher.GET_AR_Position (Part : integer; Warehouse : array of integer): integer;
+const
+  // A Rota do Leque: As 54 posições ordenadas da mais próxima (1) para a mais distante (54)
+  Ordem_Leque: array[1..54] of integer = (
+    1,
+    2, 10,
+    3, 11, 19,
+    4, 12, 20, 28,
+    5, 13, 21, 29, 37,
+    6, 14, 22, 30, 38, 46,
+    7, 15, 23, 31, 39, 47,
+    8, 16, 24, 32, 40, 48,
+    9, 17, 25, 33, 41, 49,
+    18, 26, 34, 42, 50,
+    27, 35, 43, 51,
+    36, 44, 52,
+    45, 53,
+    54
+  );
 var
-    i : integer;
+  k, pos_real : integer;
 begin
-  Result := 0;
-  for i := 1 to Length(Warehouse)-1 do   //bug alterado de 0 para 1!
+  Result := 0; // Garante que devolve 0 se não encontrar nada
+
+  // Em vez de varrer do 1 ao 54 cegamente, varre seguindo a nossa rota!
+  for k := 1 to 54 do
   begin
-      if Warehouse[i] = Part then
+    pos_real := Ordem_Leque[k];
+
+    // Proteção: só lê se a posição existir fisicamente na matriz WAREHOUSE_Parts
+    if pos_real < Length(Warehouse) then
+    begin
+      if Warehouse[pos_real] = Part then
       begin
-          result := i;
-          Exit;
+        Result := pos_real; // Encontrou a peça (ou o espaço vazio) mais próximo!
+        Exit;
       end;
+    end;
   end;
 end;
 

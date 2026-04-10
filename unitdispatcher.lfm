@@ -4918,7 +4918,7 @@ object FormDispatcher: TFormDispatcher
     end
   end
   object Timer1: TTimer
-    Interval = 200
+    Interval = 50
     OnTimer = Timer1Timer
     Left = 913
     Top = 33
