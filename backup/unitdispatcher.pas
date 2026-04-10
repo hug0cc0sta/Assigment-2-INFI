@@ -243,8 +243,6 @@ type
 
     procedure LogMsg(Texto: string); //Logger para aparecer as horas
 
-    procedure Priorizar_Expedicao_Verdes; // Lógica verdes primeiro
-
     procedure Atualizar_SCADA_Armazem; // Interface Contagem de Peças
 
     function GET_AR_Position (Part : integer; Warehouse : array of integer): integer;
@@ -255,6 +253,13 @@ type
     procedure Atualizar_Custos; // Nova função de dinheiro
 
     function Contar_Cinzentos_Em_Circulacao: integer; // Checa os cinzentos
+
+    function Tem_Expedicao_Verde_Pendente: boolean; // O nosso bloqueador
+
+    // NOVAS FUNÇÕES DO SISTEMA DE PONTUAÇÃO
+    function IsReplenishment(const order: TProduction_Order; const allOrders: TArray_Production_Order): Boolean;
+    function GetOrderPriority(const order: TProduction_Order): Integer;
+    procedure SmartSortOrders(var orders: TArray_Production_Order);
 
   end;
 
@@ -1044,15 +1049,14 @@ begin
 
         // To be Started
         Stage_To_Be_Started:
-
-        //SEMAFORO
         begin
-           // 1. Regra dos Cinzentos
-           if ((Part_Type = Part_Base_Grey) or (Part_Type = Part_Lid_Grey)) and
-              (Contar_Cinzentos_Em_Circulacao > 0) then
-             Exit; // Sinal Vermelho! Sai e tenta no próximo segundo.
+           // Mantém APENAS a Barreira Verde!
+           if (Part_Type <> Part_Base_Green) and (Part_Type <> Part_Lid_Green) then
+           begin
+             if Tem_Expedicao_Verde_Pendente then
+               Exit;
+           end;
 
-           // Sinal Verde! Pode avançar.
            current_operation := Stage_GetPart;
         end;
 
@@ -1076,6 +1080,12 @@ begin
         // Request to unload that part
         Stage_Unload :
         begin
+          // 2. NOVA REGRA DE BETÃO: A Barreira Física!
+          // Se a peça não for verde E houver verdes pendentes, bloqueia o braço!
+          if (Part_Type <> Part_Base_Green) and (Part_Type <> Part_Lid_Green) and (Tem_Expedicao_Verde_Pendente) then
+            Exit;
+
+          // Se passou a barreira, tenta descarregar:
           if (ShopResources.AR_free) and (ShopResources.AR_Out_Part = 0) then
           begin
             r := M_Unload(Part_Position_AR);
@@ -1099,11 +1109,11 @@ begin
           begin
             r := M_Do_Expedition(Part_Destination);          // Expedition
 
-            if( r = 1) then                                  // sucess
-
-             Inc(Total_Expedidas); //Incrementar Variável Global
-
-             current_operation :=  Stage_Clear_Pos_AR;
+            if( r = 1) then
+            begin                                            // <--- FALTAVA ISTO!
+               Inc(Total_Expedidas);
+               current_operation :=  Stage_Clear_Pos_AR;
+            end;                                             // <--- FALTAVA ISTO!
           end;
         end;
 
@@ -1138,10 +1148,6 @@ begin
 
         //Semaforo
         begin
-           // 1. Regra dos Cinzentos
-           if (part_type = Part_Raw_Grey) and (Contar_Cinzentos_Em_Circulacao > 0) then
-             Exit;
-
            LogMsg('INBOUND: A iniciar a receção da peça tipo ' + IntToStr(part_type));
            current_operation := Stage_Req_Inbound;
         end;
@@ -1237,102 +1243,105 @@ begin
   memLogger.Append(FormatDateTime('[hh:nn:ss] ', Now) + Texto);
 end;
 
-// Procedimento Otimizador de Plano (Substitui a antiga prioridade)  10:43
-procedure TFormDispatcher.Priorizar_Expedicao_Verdes;
+//Descobre se uma matéria-prima que estamos a mandar vir é para usar já nas máquinas, ou se é só para repor o stock final.
+function TFormDispatcher.IsReplenishment(const order: TProduction_Order; const allOrders: TArray_Production_Order): Boolean;
 var
-  i, iB, iT, k: integer;
-  ExpVerdes, ExpOutras, ProdBases, ProdTampas, Inbounds: array of TProduction_Order;
-  ordem: TProduction_Order;
+  i, needed: Integer;
 begin
-  // 1. O "Carteiro": Separar a lista do utilizador em 5 pilhas diferentes
-  for i := 0 to Length(Production_Orders) - 1 do
+  Result := True;
+  for i := 0 to Length(allOrders) - 1 do
   begin
-    ordem := Production_Orders[i];
-
-    if ordem.order_type = Type_Expedition then
+    if allOrders[i].order_type = Type_Production then
     begin
-      // É Expedição Verde?
-      if (ordem.part_type = Part_Base_Green) or (ordem.part_type = Part_Lid_Green) then
-      begin
-        SetLength(ExpVerdes, Length(ExpVerdes) + 1);
-        ExpVerdes[Length(ExpVerdes) - 1] := ordem;
-      end
-      else
-      begin
-        SetLength(ExpOutras, Length(ExpOutras) + 1);
-        ExpOutras[Length(ExpOutras) - 1] := ordem;
+      case allOrders[i].part_type of
+        Part_Base_Blue,  Part_Lid_Blue:  needed := Part_Raw_Blue;
+        Part_Base_Green, Part_Lid_Green: needed := Part_Raw_Green;
+        Part_Base_Grey,  Part_Lid_Grey:  needed := Part_Raw_Grey;
+        else                             needed := 0;
       end;
-    end
-    else if ordem.order_type = Type_Delivery then
-    begin
-      // É Aprovisionamento
-      SetLength(Inbounds, Length(Inbounds) + 1);
-      Inbounds[Length(Inbounds) - 1] := ordem;
-    end
-    else if ordem.order_type = Type_Production then
-    begin
-      // É Produção? Vamos separar Célula 1 (Bases) e Célula 2 (Tampas)
-      if (ordem.part_type = Part_Base_Blue) or (ordem.part_type = Part_Base_Green) or (ordem.part_type = Part_Base_Grey) then
+      if needed = order.part_type then
       begin
-        SetLength(ProdBases, Length(ProdBases) + 1);
-        ProdBases[Length(ProdBases) - 1] := ordem;
-      end
-      else
-      begin
-        SetLength(ProdTampas, Length(ProdTampas) + 1);
-        ProdTampas[Length(ProdTampas) - 1] := ordem;
+        Result := False; // Encontrou uma produção que precisa desta MP!
+        Exit;
       end;
     end;
   end;
+end;
 
-  // 2. O "Maestro": Reconstruir o Array Principal na ordem OTIMIZADA
-  k := 0;
 
-  // A) PRIORIDADE DO PROFESSOR: Expedições Verdes primeiro
-  // Se houver stock saem logo. Se não houver, ficam ativas "à espreita".
-  for i := 0 to Length(ExpVerdes) - 1 do
+//Dá pontuação 0 aos Cinzentos e Tampas Verdes que já existam, e atira as reposições de stock para o fim com 90 pontos.
+function TFormDispatcher.GetOrderPriority(const order: TProduction_Order): Integer;
+begin
+  // Regra A: Aprovisionamentos só para repor stock vão para o fim da fila
+  if (order.order_type = Type_Delivery) and IsReplenishment(order, Production_Orders) then
   begin
-    Production_Orders[k] := ExpVerdes[i];
-    Inc(k);
+    Result := 90;
+    Exit;
   end;
 
-  // B) O SEGREDO DO TEMPO: Intercalar Produções (1 Base, 1 Tampa, 1 Base...)
-  // Isto obriga o armazém a alimentar a Célula 1 e a Célula 2 para trabalharem juntas!
-  iB := 0;
-  iT := 0;
-  while (iB < Length(ProdBases)) or (iT < Length(ProdTampas)) do
+  // Regra B: Expedir Verdes que JÁ ESTÃO no armazém é prioridade absoluta!
+  if (order.order_type = Type_Expedition) and
+     ((order.part_type = Part_Base_Green) or (order.part_type = Part_Lid_Green)) and
+     (GET_AR_Position(order.part_type, WAREHOUSE_Parts) > 0) then
   begin
-    if iB < Length(ProdBases) then
+    Result := 0;
+    Exit;
+  end;
+
+  // Regra C: Pontuações por Cor e Tipo de Tarefa
+  case order.part_type of
+    // --- CINZENTOS ---
+    Part_Raw_Grey, Part_Base_Grey, Part_Lid_Grey:
+      case order.order_type of
+        Type_Production: Result := -1; // Fura a fila toda.
+        Type_Delivery:   Result := 11; // 1º Mandar vir a MP
+        Type_Production: Result := 0;  // 2º Máquina Cinzenta no topo (Gargalo)
+        Type_Expedition: Result := 22; // 3º Expedir no fim
+        else             Result := 99;
+      end;
+
+    // --- VERDES ---
+    Part_Raw_Green, Part_Base_Green, Part_Lid_Green:
+      case order.order_type of
+        Type_Delivery:   Result := 10;
+        Type_Production: Result := 2;
+        Type_Expedition: Result := 21;
+        else             Result := 99;
+      end;
+
+    // --- AZUIS ---
+    Part_Raw_Blue, Part_Base_Blue, Part_Lid_Blue:
+      case order.order_type of
+        Type_Delivery:   Result := 12;
+        Type_Production: Result := 2;
+        Type_Expedition: Result := 23;
+        else             Result := 99;
+      end;
+
+    else Result := 99;
+  end;
+end;
+
+//O Motor de Ordenação
+procedure TFormDispatcher.SmartSortOrders(var orders: TArray_Production_Order);
+var
+  i, j: Integer;
+  key: TProduction_Order;
+  keyPriority: Integer;
+begin
+  for i := 1 to Length(orders) - 1 do
+  begin
+    key         := orders[i];
+    keyPriority := GetOrderPriority(key);
+    j := i - 1;
+    while (j >= 0) and (GetOrderPriority(orders[j]) > keyPriority) do
     begin
-      Production_Orders[k] := ProdBases[iB];
-      Inc(k);
-      Inc(iB);
+      orders[j + 1] := orders[j];
+      Dec(j);
     end;
-    if iT < Length(ProdTampas) then
-    begin
-      Production_Orders[k] := ProdTampas[iT];
-      Inc(k);
-      Inc(iT);
-    end;
+    orders[j + 1] := key;
   end;
-
-  // C) ESCONDER GARGALOS: Aprovisionamentos
-  // Como as máquinas vão estar ocupadas durante 2 minutos, o braço do armazém
-  // fica livre. É neste momento que ele manda vir as matérias-primas todas!
-  for i := 0 to Length(Inbounds) - 1 do
-  begin
-    Production_Orders[k] := Inbounds[i];
-    Inc(k);
-  end;
-
-  // D) FIM DE LINHA: Restantes Expedições (Azul e Cinza)
-  for i := 0 to Length(ExpOutras) - 1 do
-  begin
-    Production_Orders[k] := ExpOutras[i];
-    Inc(k);
-  end;
-
-  LogMsg('SISTEMA: Plano otimizado! Células intercaladas e tarefas reordenadas.');
+  LogMsg('SISTEMA: Plano reordenado matematicamente com sucesso.');
 end;
 
 //Atualiza o Armazem
@@ -1576,21 +1585,42 @@ begin
   cont := 0;
   for i := 0 to Length(ShopTasks) - 1 do
   begin
-    // A peça desta tarefa é da família Cinzenta?
-    if (ShopTasks[i].part_type = Part_Raw_Grey) or
-       (ShopTasks[i].part_type = Part_Base_Grey) or
-       (ShopTasks[i].part_type = Part_Lid_Grey) then
+    // NOVA REGRA: Só contamos se a tarefa for puramente de PRODUÇÃO!
+    if ShopTasks[i].task_type = Type_Production then
     begin
-      // NOVA REGRA: Se não está "Por Iniciar" e não está "Terminada",
-      // então JÁ ARRANCOU e está algures ativa no sistema!
-      if (ShopTasks[i].current_operation <> Stage_To_Be_Started) and
-         (ShopTasks[i].current_operation <> Stage_Finished) then
+      if (ShopTasks[i].part_type = Part_Base_Grey) or
+         (ShopTasks[i].part_type = Part_Lid_Grey) then
       begin
-        Inc(cont);
+        if (ShopTasks[i].current_operation <> Stage_To_Be_Started) and
+           (ShopTasks[i].current_operation <> Stage_Finished) then
+        begin
+          Inc(cont);
+        end;
       end;
     end;
   end;
   Result := cont;
+end;
+
+
+function TFormDispatcher.Tem_Expedicao_Verde_Pendente: boolean;
+var
+  i: integer;
+begin
+  Result := False;
+  for i := 0 to Length(ShopTasks) - 1 do
+  begin
+    // Se for uma expedição de peça Verde E ainda não estiver terminada...
+    if (ShopTasks[i].task_type = Type_Expedition) and
+       ((ShopTasks[i].part_type = Part_Base_Green) or (ShopTasks[i].part_type = Part_Lid_Green)) then
+    begin
+      if ShopTasks[i].current_operation <> Stage_Finished then
+      begin
+        Result := True; // A barreira desce!
+        Exit;
+      end;
+    end;
+  end;
 end;
 
 //----------------------------- Fim código interno -----------------------------
@@ -1924,8 +1954,11 @@ begin
   // --- FASE 4: Iniciar o Processo Fabril ---
   LogMsg('SISTEMA: A converter ' + IntToStr(lstPlano.Items.Count) + ' linha(s) para tarefas de máquina...');
 
-  //Priorizar a expedição das peças verdes
-  Priorizar_Expedicao_Verdes;
+
+
+  //Otimizar a Ordem
+  SmartSortOrders(Production_Orders);
+
 
   // Reiniciamos o índice de execução (crucial se fores executar vários planos seguidos)
   idx_Task_Executing := 0;
