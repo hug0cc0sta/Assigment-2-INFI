@@ -1211,54 +1211,102 @@ begin
   memLogger.Append(FormatDateTime('[hh:nn:ss] ', Now) + Texto);
 end;
 
-//Procedimento priorizar verdes
+// Procedimento Otimizador de Plano (Substitui a antiga prioridade)
 procedure TFormDispatcher.Priorizar_Expedicao_Verdes;
 var
-  i, indexVerdes, indexOutros: integer;
-  ListaVerdes, ListaOutros: array of TProduction_Order;
+  i, iB, iT, k: integer;
+  ExpVerdes, ExpOutras, ProdBases, ProdTampas, Inbounds: array of TProduction_Order;
   ordem: TProduction_Order;
 begin
-  indexVerdes := 0;
-  indexOutros := 0;
-
-  // 1. Percorrer o plano original e separar
+  // 1. O "Carteiro": Separar a lista do utilizador em 5 pilhas diferentes
   for i := 0 to Length(Production_Orders) - 1 do
   begin
     ordem := Production_Orders[i];
 
-    // NOVA LÓGICA: Apenas Expedições de peças Verdes (Bases ou Tampas) vão para o topo!
-    // Puxamos todas as tarefas associadas a elas para o topo!
-    if (ordem.order_type = Type_Expedition) and
-       ((ordem.part_type = Part_Base_Green) or (ordem.part_type = Part_Lid_Green)) then
+    if ordem.order_type = Type_Expedition then
     begin
-      SetLength(ListaVerdes, indexVerdes + 1);
-      ListaVerdes[indexVerdes] := ordem;
-      Inc(indexVerdes); // Como o ciclo for avança de cima para baixo, a Produção entra sempre antes da Expedição!
+      // É Expedição Verde?
+      if (ordem.part_type = Part_Base_Green) or (ordem.part_type = Part_Lid_Green) then
+      begin
+        SetLength(ExpVerdes, Length(ExpVerdes) + 1);
+        ExpVerdes[Length(ExpVerdes) - 1] := ordem;
+      end
+      else
+      begin
+        SetLength(ExpOutras, Length(ExpOutras) + 1);
+        ExpOutras[Length(ExpOutras) - 1] := ordem;
+      end;
     end
-    else
+    else if ordem.order_type = Type_Delivery then
     begin
-      // Peças Azuis e Cinzentas ficam na lista de espera
-      SetLength(ListaOutros, indexOutros + 1);
-      ListaOutros[indexOutros] := ordem;
-      Inc(indexOutros);
+      // É Aprovisionamento
+      SetLength(Inbounds, Length(Inbounds) + 1);
+      Inbounds[Length(Inbounds) - 1] := ordem;
+    end
+    else if ordem.order_type = Type_Production then
+    begin
+      // É Produção? Vamos separar Célula 1 (Bases) e Célula 2 (Tampas)
+      if (ordem.part_type = Part_Base_Blue) or (ordem.part_type = Part_Base_Green) or (ordem.part_type = Part_Base_Grey) then
+      begin
+        SetLength(ProdBases, Length(ProdBases) + 1);
+        ProdBases[Length(ProdBases) - 1] := ordem;
+      end
+      else
+      begin
+        SetLength(ProdTampas, Length(ProdTampas) + 1);
+        ProdTampas[Length(ProdTampas) - 1] := ordem;
+      end;
     end;
   end;
 
-  // 2. Reconstruir o array principal: Primeiro todos os passos dos Verdes!
-  for i := 0 to indexVerdes - 1 do
+  // 2. O "Maestro": Reconstruir o Array Principal na ordem OTIMIZADA
+  k := 0;
+
+  // A) PRIORIDADE DO PROFESSOR: Expedições Verdes primeiro
+  // Se houver stock saem logo. Se não houver, ficam ativas "à espreita".
+  for i := 0 to Length(ExpVerdes) - 1 do
   begin
-    Production_Orders[i] := ListaVerdes[i];
+    Production_Orders[k] := ExpVerdes[i];
+    Inc(k);
   end;
 
-  // 3. Reconstruir o array principal: Depois as restantes peças
-  for i := 0 to indexOutros - 1 do
+  // B) O SEGREDO DO TEMPO: Intercalar Produções (1 Base, 1 Tampa, 1 Base...)
+  // Isto obriga o armazém a alimentar a Célula 1 e a Célula 2 para trabalharem juntas!
+  iB := 0;
+  iT := 0;
+  while (iB < Length(ProdBases)) or (iT < Length(ProdTampas)) do
   begin
-    Production_Orders[indexVerdes + i] := ListaOutros[i];
+    if iB < Length(ProdBases) then
+    begin
+      Production_Orders[k] := ProdBases[iB];
+      Inc(k);
+      Inc(iB);
+    end;
+    if iT < Length(ProdTampas) then
+    begin
+      Production_Orders[k] := ProdTampas[iT];
+      Inc(k);
+      Inc(iT);
+    end;
   end;
 
-  // 4. Se encontrou alguma peça verde para puxar para cima, avisa no Logger
-  if indexVerdes > 0 then
-    LogMsg('SISTEMA: Regra aplicada! ' + IntToStr(indexVerdes) + ' tarefa(s) da família Verde puxadas para o início da fila.');
+  // C) ESCONDER GARGALOS: Aprovisionamentos
+  // Como as máquinas vão estar ocupadas durante 2 minutos, o braço do armazém
+  // fica livre. É neste momento que ele manda vir as matérias-primas todas!
+  for i := 0 to Length(Inbounds) - 1 do
+  begin
+    Production_Orders[k] := Inbounds[i];
+    Inc(k);
+  end;
+
+  // D) FIM DE LINHA: Restantes Expedições (Azul e Cinza)
+  for i := 0 to Length(ExpOutras) - 1 do
+  begin
+    Production_Orders[k] := ExpOutras[i];
+    Inc(k);
+  end;
+
+  LogMsg('SISTEMA: Plano otimizado! Células intercaladas e tarefas reordenadas.');
 end;
 
 //Atualiza o Armazem

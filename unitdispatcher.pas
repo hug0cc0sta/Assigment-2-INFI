@@ -1211,7 +1211,7 @@ begin
   memLogger.Append(FormatDateTime('[hh:nn:ss] ', Now) + Texto);
 end;
 
-// Procedimento Otimizador de Plano (Substitui a antiga prioridade)
+// Procedimento Otimizador de Plano (Substitui a antiga prioridade)  10:43
 procedure TFormDispatcher.Priorizar_Expedicao_Verdes;
 var
   i, iB, iT, k: integer;
