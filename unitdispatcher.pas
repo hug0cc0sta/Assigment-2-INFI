@@ -1237,21 +1237,20 @@ begin
   memLogger.Append(FormatDateTime('[hh:nn:ss] ', Now) + Texto);
 end;
 
-// Procedimento Otimizador de Plano (Substitui a antiga prioridade)  10:43
+// Procedimento Otimizador de Plano (O "Motor de Overlapping")
 procedure TFormDispatcher.Priorizar_Expedicao_Verdes;
 var
   i, iB, iT, k: integer;
   ExpVerdes, ExpOutras, ProdBases, ProdTampas, Inbounds: array of TProduction_Order;
   ordem: TProduction_Order;
 begin
-  // 1. O "Carteiro": Separar a lista do utilizador em 5 pilhas diferentes
+  // 1. O "Carteiro": Separar a lista do utilizador em 5 categorias
   for i := 0 to Length(Production_Orders) - 1 do
   begin
     ordem := Production_Orders[i];
 
     if ordem.order_type = Type_Expedition then
     begin
-      // É Expedição Verde?
       if (ordem.part_type = Part_Base_Green) or (ordem.part_type = Part_Lid_Green) then
       begin
         SetLength(ExpVerdes, Length(ExpVerdes) + 1);
@@ -1265,13 +1264,11 @@ begin
     end
     else if ordem.order_type = Type_Delivery then
     begin
-      // É Aprovisionamento
       SetLength(Inbounds, Length(Inbounds) + 1);
       Inbounds[Length(Inbounds) - 1] := ordem;
     end
     else if ordem.order_type = Type_Production then
     begin
-      // É Produção? Vamos separar Célula 1 (Bases) e Célula 2 (Tampas)
       if (ordem.part_type = Part_Base_Blue) or (ordem.part_type = Part_Base_Green) or (ordem.part_type = Part_Base_Grey) then
       begin
         SetLength(ProdBases, Length(ProdBases) + 1);
@@ -1285,19 +1282,13 @@ begin
     end;
   end;
 
-  // 2. O "Maestro": Reconstruir o Array Principal na ordem OTIMIZADA
+  // 2. O "Maestro": Reconstruir o Array Principal na ordem de ALTA PERFORMANCE
   k := 0;
 
-  // A) PRIORIDADE DO PROFESSOR: Expedições Verdes primeiro
-  // Se houver stock saem logo. Se não houver, ficam ativas "à espreita".
-  for i := 0 to Length(ExpVerdes) - 1 do
-  begin
-    Production_Orders[k] := ExpVerdes[i];
-    Inc(k);
-  end;
-
-  // B) O SEGREDO DO TEMPO: Intercalar Produções (1 Base, 1 Tampa, 1 Base...)
-  // Isto obriga o armazém a alimentar a Célula 1 e a Célula 2 para trabalharem juntas!
+  // A) PRODUÇÕES NO TOPO DO ARRAY (Intercaladas)
+  // Vão agarrar nas matérias-primas e meter as máquinas a trabalhar no segundo ZERO.
+  // Como ficam no topo do array, quando a peça voltar da máquina, o código lê-as
+  // primeiro e dá-lhes prioridade absoluta no uso do braço do armazém!
   iB := 0;
   iT := 0;
   while (iB < Length(ProdBases)) or (iT < Length(ProdTampas)) do
@@ -1316,23 +1307,32 @@ begin
     end;
   end;
 
-  // C) ESCONDER GARGALOS: Aprovisionamentos
-  // Como as máquinas vão estar ocupadas durante 2 minutos, o braço do armazém
-  // fica livre. É neste momento que ele manda vir as matérias-primas todas!
+  // B) EXPEDIÇÕES VERDES (Requisito do professor)
+  // Enquanto as Células 1 e 2 trabalham durante 2 minutos, o braço fica livre.
+  // Vai imediatamente despachar as Tampas Verdes que já estavam na prateleira!
+  for i := 0 to Length(ExpVerdes) - 1 do
+  begin
+    Production_Orders[k] := ExpVerdes[i];
+    Inc(k);
+  end;
+
+  // C) APROVISIONAMENTOS (Para manter o braço sempre a faturar)
+  // A seguir às expedições verdes, e ainda com as máquinas a trabalhar,
+  // manda vir as peças em falta do exterior e arruma-as.
   for i := 0 to Length(Inbounds) - 1 do
   begin
     Production_Orders[k] := Inbounds[i];
     Inc(k);
   end;
 
-  // D) FIM DE LINHA: Restantes Expedições (Azul e Cinza)
+  // D) EXPEDIÇÕES NORMAIS (Ficam pacientemente para o fim)
   for i := 0 to Length(ExpOutras) - 1 do
   begin
     Production_Orders[k] := ExpOutras[i];
     Inc(k);
   end;
 
-  LogMsg('SISTEMA: Plano otimizado! Células intercaladas e tarefas reordenadas.');
+  LogMsg('SISTEMA: Plano Super-Otimizado! Prioridade total às máquinas e gestão inteligente do gargalo.');
 end;
 
 //Atualiza o Armazem
