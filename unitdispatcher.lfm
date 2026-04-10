@@ -14,11 +14,11 @@ object FormDispatcher: TFormDispatcher
     Height = 534
     Top = 80
     Width = 1281
-    ActivePage = TabSheet1
+    ActivePage = TabSheet2
     Align = alClient
     Font.Style = [fsBold]
     ParentFont = False
-    TabIndex = 1
+    TabIndex = 2
     TabOrder = 0
     object TabSheet5: TTabSheet
       Caption = 'Info'
@@ -4407,9 +4407,9 @@ object FormDispatcher: TFormDispatcher
         TabOrder = 1
         ColWidths = (
           92
-          113
-          113
-          113
+          119
+          119
+          118
         )
         Cells = (
           9

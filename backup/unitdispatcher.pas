@@ -1295,7 +1295,6 @@ begin
       case order.order_type of
         Type_Production: Result := -1; // Fura a fila toda.
         Type_Delivery:   Result := 11; // 1º Mandar vir a MP
-        Type_Production: Result := 0;  // 2º Máquina Cinzenta no topo (Gargalo)
         Type_Expedition: Result := 22; // 3º Expedir no fim
         else             Result := 99;
       end;
@@ -1763,16 +1762,23 @@ begin
   posIndex := 1; // Aponta para o primeiro espaço válido (InitPositions[1] que é a célula 1)
 
   // 5. Inserir as peças de acordo com os valores da Interface
-  // A função InserirPeca vai usar os códigos corretos das peças
-  InserirPeca(Part_Raw_Blue, spnMatAzul.Value);     // Código 1
-  InserirPeca(Part_Raw_Green, spnMatVerde.Value);   // Código 2
-  InserirPeca(Part_Raw_Grey, spnMatCinza.Value);    // Código 3
-  InserirPeca(Part_Base_Blue, spnBaseAzul.Value);   // Código 4
-  InserirPeca(Part_Base_Green, spnBaseVerde.Value); // Código 5
-  InserirPeca(Part_Base_Grey, spnBaseCinza.Value);  // Código 6
-  InserirPeca(Part_Lid_Blue, spnTampaAzul.Value);   // Código 7
-  InserirPeca(Part_Lid_Green, spnTampaVerde.Value); // Código 8
-  InserirPeca(Part_Lid_Grey, spnTampaCinza.Value);  // Código 9
+
+  // 1º Matéria-Prima Cinzenta (Posição 1 - Arranca logo para a máquina!)
+  InserirPeca(Part_Raw_Grey, spnMatCinza.Value);
+
+  // 2º Produtos Verdes Prontos (Posição 10/19 - Expedição imediata a seguir!)
+  InserirPeca(Part_Lid_Green, spnTampaVerde.Value);
+  InserirPeca(Part_Base_Green, spnBaseVerde.Value);
+
+  // 3º Matéria-Prima Verde (Posição seguinte - Para a outra célula)
+  InserirPeca(Part_Raw_Green, spnMatVerde.Value);
+
+  // 4º Matéria-Prima Azul e restantes
+  InserirPeca(Part_Raw_Blue, spnMatAzul.Value);
+  InserirPeca(Part_Base_Blue, spnBaseAzul.Value);
+  InserirPeca(Part_Lid_Blue, spnTampaAzul.Value);
+  InserirPeca(Part_Base_Grey, spnBaseCinza.Value);
+  InserirPeca(Part_Lid_Grey, spnTampaCinza.Value);
 
   LogMsg('SISTEMA: Inicialização do armazém concluída!');
 
