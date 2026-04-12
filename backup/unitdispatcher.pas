@@ -98,7 +98,6 @@ type
     cbProdExp: TComboBox;
     cbTipoDefeito: TComboBox;
     cbCorDefeito: TComboBox;
-    edtQuantidadeDefeito: TEdit;
     GroupBox1: TGroupBox;
     GroupBox10: TGroupBox;
     GroupBox11: TGroupBox;
@@ -211,6 +210,7 @@ type
     shpLedCel2: TShape;
     shpStatusBraco: TShape;
     shpStatusPLC: TShape;
+    spnQuantidadeDefeito: TSpinEdit;
     spnMatAzul: TSpinEdit;
     spnMatVerde: TSpinEdit;
     spnMatCinza: TSpinEdit;
@@ -2363,17 +2363,17 @@ begin
   end;
 
   // 2. Verifica se a quantidade faz sentido
-  if StrToIntDef(edtQuantidadeDefeito.Text,0) <= 0 then
+  if StrToIntDef(spnQuantidadeDefeito.Text,0) <= 0 then
   begin
     ShowMessage('A quantidade tem de ser pelo menos 1!');
     Exit;
   end;
 
   // 3. Junta tudo e envia para a ListBox no formato padrão
-  lstDefeito.Items.Add('Produção | ' + cbTipoDefeito.Text + ' ' + cbCorDefeito.Text + ' | ' + edtQuantidadeDefeito.Text);
+  lstDefeito.Items.Add('Produção | ' + cbTipoDefeito.Text + ' ' + cbCorDefeito.Text + ' | ' + spnQuantidadeDefeito.Text);
 
-  // 4. Regista a ação no nosso Logger - TIRAR ???
-  ////////////////LogMsg('SISTEMA: Adicionado plano -> Produção de ' + IntToStr(spnQtdProd.Value) + 'x ' + cbProdProd.Text + ' ' + cbCorProd.Text);
+  // 4. Regista a ação no nosso Logger
+  LogMsg('SISTEMA: Adicionado defeito -> Defeito em ' + IntToStr(spnQuantidadeDefeito.Value) + 'x ' + cbTipoDefeito.Text + ' ' + cbCorDefeito.Text);
 end;
 
 
