@@ -189,6 +189,7 @@ type
     lblTotalRecebidas: TLabel;
     lstDefeito: TListBox;
     lstPlano: TListBox;
+    lstHistorico: TListBox;
     memLogger: TMemo;
     PageControl1: TPageControl;
     Header: TPanel;
@@ -257,6 +258,8 @@ type
     procedure btnAdicionarDefeitoClick(Sender: TObject);
     procedure btnDefeitosLimparClick(Sender: TObject);
     procedure btnDefeitoConfirmarClick(Sender: TObject);
+    procedure lstHistoricoDrawItem(Control: TWinControl; Index: Integer;
+      aRect: TRect; State: TOwnerDrawState);
   private
   public
     procedure Dispatcher(var tasks:TArray_Task; {var idx : integer;} shopfloor: TResources );    //Comentado para fazer mais que uma tarefa ao mesmo tempo
@@ -291,6 +294,8 @@ type
     procedure Atualizar_Matriz_Armazem;
 
     procedure Atualizar_SCADA_Modular; //Sinotico scada
+
+    procedure Atualizar_Historico; // Para a ListBox na Tab de Monitorização
 
   end;
 
@@ -381,6 +386,7 @@ var
   // Última leitura Modbus (espelho para o separador SCADA)
   LastPLCStatus: status_values;
 
+  TasksReportadas: array of Boolean; // Registo de tarefas já reportadas no histórico
 
 implementation
 
@@ -698,6 +704,132 @@ begin
 
 end;
 
+procedure TFormDispatcher.Shape7Click(Sender: TObject);
+begin
+  PageControl1.ActivePage := TabSheet10;
+end;
+
+procedure TFormDispatcher.Timer1Timer(Sender: TObject);
+var
+  TodasConcluidas: boolean; // AS VARIÁVEIS TÊM DE FICAR AQUI EM CIMA!
+  i: integer;
+begin
+  // RELÓGIO DA UI (Corre sempre, independentemente do PLC)
+  labelRelogio.Caption := FormatDateTime('hh:nn:ss', Now);
+
+  // Se o botão ainda diz "CONECTAR PLC", o código pára aqui e sai da procedure.
+  if btnPLC.Caption = 'CONECTAR PLC' then
+  begin
+    Exit;
+  end;
+
+  BExecuteClick(Self);
+
+
+  Atualizar_SCADA_Armazem; //Atualiza a cada segundo o armazem
+
+  Atualizar_Matriz_Armazem; // MATRIZ VISUAL EM TEMPO REAL!
+
+  Atualizar_SCADA_Modular; //Atualiza em tempo real o novo scada
+
+  UpdateMachineTimers(ShopResources);// Atualiza os cronómetros
+  Atualizar_Custos; //O Custo sobe em tempo real!
+
+  Atualizar_Historico;
+
+  // --- NOVO TRAVÃO DE FIM DE TURNO MULTI-TAREFA ---
+  if Length(ShopTasks) > 0 then
+  begin
+    // Vamos assumir que todas acabaram, e tentamos provar o contrário
+    TodasConcluidas := True;
+
+    for i := 0 to Length(ShopTasks) - 1 do
+    begin
+      if ShopTasks[i].current_operation <> Stage_Finished then
+      begin
+        TodasConcluidas := False; // Encontrámos uma que ainda está a andar!
+        Break;
+      end;
+    end;
+
+    // Se confirmarmos que todas estão realmente no Stage_Finished:
+    if TodasConcluidas then
+    begin
+      Timer1.Enabled := False; // Pára o relógio da fábrica
+
+      // Pára o cronómetro dos kpis
+      Plano_A_Executar := False;
+
+      LogMsg('SISTEMA: Plano Semanal concluído! A aguardar Validação de Qualidade.');
+      ShowMessage('Fim do Plano Semanal!' + sLineBreak + 'Por favor, valide a qualidade das peças produzidas no separador Monitorização.');
+
+      // Limpa a lista de tarefas
+      SetLength(ShopTasks, 0);
+
+      // Muda o ecrã automaticamente para o separador da grelha
+      PageControl1.ActivePage := TabSheet2;
+    end;
+  end;
+end;
+
+
+// get the first position (cell) in AR that contains the "Part" (Procura em Leque Otimizada)
+function TFormDispatcher.GET_AR_Position (Part : integer; Warehouse : array of integer): integer;
+const
+  // A Rota do Leque: As 54 posições ordenadas da mais próxima (1) para a mais distante (54)
+  Ordem_Leque: array[1..54] of integer = (
+    1,
+    2, 10,
+    3, 11, 19,
+    4, 12, 20, 28,
+    5, 13, 21, 29, 37,
+    6, 14, 22, 30, 38, 46,
+    7, 15, 23, 31, 39, 47,
+    8, 16, 24, 32, 40, 48,
+    9, 17, 25, 33, 41, 49,
+    18, 26, 34, 42, 50,
+    27, 35, 43, 51,
+    36, 44, 52,
+    45, 53,
+    54
+  );
+var
+  k, pos_real : integer;
+begin
+  Result := 0; // Garante que devolve 0 se não encontrar nada
+
+  // Em vez de varrer do 1 ao 54 cegamente, varre seguindo a nossa rota!
+  for k := 1 to 54 do
+  begin
+    pos_real := Ordem_Leque[k];
+
+    // Proteção: só lê se a posição existir fisicamente na matriz WAREHOUSE_Parts
+    if pos_real < Length(Warehouse) then
+    begin
+      if Warehouse[pos_real] = Part then
+      begin
+        Result := pos_real; // Encontrou a peça (ou o espaço vazio) mais próximo!
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+//Sets the Position of the AR with the "Part" provided
+procedure TFormDispatcher.SET_AR_Position (idx : integer; Part : integer; var Warehouse : array of integer);
+begin
+  Warehouse [ idx ] := Part;
+end;
+
+procedure TFormDispatcher.BExecuteClick(Sender: TObject);
+begin
+  // See the availability of resources
+  UpdateResources(ShopResources);
+  //Dispatcher executing per cycle.
+  if(Length(ShopTasks)>0) then begin
+    Dispatcher(ShopTasks, {idx_Task_Executing,} ShopResources);  //Multitarefas
+  end;
+end;
 
 procedure TFormDispatcher.FormCreate(Sender: TObject);
 begin
@@ -818,137 +950,80 @@ begin
   sgArmazem.Canvas.Frame(aRect);
 end;
 
-procedure TFormDispatcher.Shape7Click(Sender: TObject);
-begin
-  PageControl1.ActivePage := TabSheet10;
-
-end;
-
-
-
-procedure TFormDispatcher.Timer1Timer(Sender: TObject);
+procedure TFormDispatcher.lstHistoricoDrawItem(Control: TWinControl;
+  Index: Integer; ARect: TRect; State: TOwnerDrawState);
 var
-  TodasConcluidas: boolean; // AS VARIÁVEIS TÊM DE FICAR AQUI EM CIMA!
-  i: integer;
+  linha: string;
+  corFundo, corTexto: TColor;
+  estilo: TTextStyle;
 begin
-  // RELÓGIO DA UI (Corre sempre, independentemente do PLC)
-  labelRelogio.Caption := FormatDateTime('hh:nn:ss', Now);
+  if Index >= lstHistorico.Items.Count then Exit;
 
-  // Se o botão ainda diz "CONECTAR PLC", o código pára aqui e sai da procedure.
-  if btnPLC.Caption = 'CONECTAR PLC' then
+  linha := lstHistorico.Items[Index];
+
+  // --- LÓGICA DE CORES ---
+  // Deteta a cor pelo conteúdo da linha
+  if Pos('Azul', linha) > 0 then
   begin
-    Exit;
+    corFundo := $FFDDDD; // Azul claro (BGR no Windows: DD=R, DD=G, FF=B)
+    corTexto := $993300; // Azul escuro
+  end
+  else if Pos('Verde', linha) > 0 then
+  begin
+    corFundo := $DFFFDF; // Verde claro
+    corTexto := $006600; // Verde escuro
+  end
+  else if Pos('Cinza', linha) > 0 then
+  begin
+    corFundo := $EEEEEE; // Cinza claro
+    corTexto := $555555; // Cinza escuro
+  end
+  else if Pos('INBOUND', linha) > 0 then
+  begin
+    corFundo := $FFFDE7; // Amarelo muito suave (genérico)
+    corTexto := $7A5C00;
+  end
+  else
+  begin
+    corFundo := clWhite;
+    corTexto := clBlack;
   end;
 
-  BExecuteClick(Self);
-
-
-  Atualizar_SCADA_Armazem; //Atualiza a cada segundo o armazem
-
-  Atualizar_Matriz_Armazem; // MATRIZ VISUAL EM TEMPO REAL!
-
-  Atualizar_SCADA_Modular; //Atualiza em tempo real o novo scada
-
-  UpdateMachineTimers(ShopResources);// Atualiza os cronómetros
-  Atualizar_Custos; //O Custo sobe em tempo real!
-
-  // --- NOVO TRAVÃO DE FIM DE TURNO MULTI-TAREFA ---
-  if Length(ShopTasks) > 0 then
+  // Se a linha estiver selecionada, inverte para destacar
+  if lstHistorico.Selected[Index] then
   begin
-    // Vamos assumir que todas acabaram, e tentamos provar o contrário
-    TodasConcluidas := True;
-
-    for i := 0 to Length(ShopTasks) - 1 do
-    begin
-      if ShopTasks[i].current_operation <> Stage_Finished then
-      begin
-        TodasConcluidas := False; // Encontrámos uma que ainda está a andar!
-        Break;
-      end;
-    end;
-
-    // Se confirmarmos que todas estão realmente no Stage_Finished:
-    if TodasConcluidas then
-    begin
-      Timer1.Enabled := False; // Pára o relógio da fábrica
-
-      // Pára o cronómetro dos kpis
-      Plano_A_Executar := False;
-
-      LogMsg('SISTEMA: Plano Semanal concluído! A aguardar Validação de Qualidade.');
-      ShowMessage('Fim do Plano Semanal!' + sLineBreak + 'Por favor, valide a qualidade das peças produzidas no separador Monitorização.');
-
-      // Limpa a lista de tarefas
-      SetLength(ShopTasks, 0);
-
-      // Muda o ecrã automaticamente para o separador da grelha
-      PageControl1.ActivePage := TabSheet2;
-    end;
+    corFundo := clHighlight;
+    corTexto := clHighlightText;
   end;
-end;
 
+  // --- DESENHAR ---
+  // 1. Fundo colorido
+  lstHistorico.Canvas.Brush.Color := corFundo;
+  lstHistorico.Canvas.FillRect(ARect);
 
-// get the first position (cell) in AR that contains the "Part" (Procura em Leque Otimizada)
-function TFormDispatcher.GET_AR_Position (Part : integer; Warehouse : array of integer): integer;
-const
-  // A Rota do Leque: As 54 posições ordenadas da mais próxima (1) para a mais distante (54)
-  Ordem_Leque: array[1..54] of integer = (
-    1,
-    2, 10,
-    3, 11, 19,
-    4, 12, 20, 28,
-    5, 13, 21, 29, 37,
-    6, 14, 22, 30, 38, 46,
-    7, 15, 23, 31, 39, 47,
-    8, 16, 24, 32, 40, 48,
-    9, 17, 25, 33, 41, 49,
-    18, 26, 34, 42, 50,
-    27, 35, 43, 51,
-    36, 44, 52,
-    45, 53,
-    54
+  // 2. Barra colorida à esquerda (3px) — detalhe visual
+  lstHistorico.Canvas.Brush.Color := corTexto;
+  lstHistorico.Canvas.FillRect(Rect(ARect.Left, ARect.Top, ARect.Left + 4, ARect.Bottom));
+
+  // 3. Texto com a cor certa
+  lstHistorico.Canvas.Font.Color := corTexto;
+  lstHistorico.Canvas.Font.Style := [];
+  lstHistorico.Canvas.Brush.Color := corFundo; // Fundo do texto limpo
+
+  // Configurar alinhamento centrado verticalmente
+  estilo := lstHistorico.Canvas.TextStyle;
+  estilo.Layout := tlCenter;
+  estilo.Alignment := taLeftJustify;
+  lstHistorico.Canvas.TextStyle := estilo;
+
+  // Desenhar o texto com margem à esquerda (8px depois da barra)
+  lstHistorico.Canvas.TextRect(
+    Rect(ARect.Left + 8, ARect.Top, ARect.Right, ARect.Bottom),
+    ARect.Left + 8,
+    ARect.Top,
+    linha
   );
-var
-  k, pos_real : integer;
-begin
-  Result := 0; // Garante que devolve 0 se não encontrar nada
-
-  // Em vez de varrer do 1 ao 54 cegamente, varre seguindo a nossa rota!
-  for k := 1 to 54 do
-  begin
-    pos_real := Ordem_Leque[k];
-
-    // Proteção: só lê se a posição existir fisicamente na matriz WAREHOUSE_Parts
-    if pos_real < Length(Warehouse) then
-    begin
-      if Warehouse[pos_real] = Part then
-      begin
-        Result := pos_real; // Encontrou a peça (ou o espaço vazio) mais próximo!
-        Exit;
-      end;
-    end;
-  end;
 end;
-
-
-//Sets the Position of the AR with the "Part" provided
-procedure TFormDispatcher.SET_AR_Position (idx : integer; Part : integer; var Warehouse : array of integer);
-begin
-  Warehouse [ idx ] := Part;
-end;
-
-
-procedure TFormDispatcher.BExecuteClick(Sender: TObject);
-begin
-  // See the availability of resources
-  UpdateResources(ShopResources);
-  //Dispatcher executing per cycle.
-  if(Length(ShopTasks)>0) then begin
-    Dispatcher(ShopTasks, {idx_Task_Executing,} ShopResources);  //Multitarefas
-  end;
-end;
-
-
 //-------------------- FIM PROCEDURES PRÉ-FEITAS PROFESSOR ---------------------
 
 
@@ -1895,6 +1970,40 @@ begin
     lblTapeteSaidaAR.Caption := 'Saída Armazém: [ Livre ]';
 end;
 
+procedure TFormDispatcher.Atualizar_Historico;
+var
+  i: integer;
+  task: TTask;
+  descricao: string;
+  hora: string;
+begin
+  if Length(TasksReportadas) <> Length(ShopTasks) then Exit;
+
+  for i := 0 to Length(ShopTasks) - 1 do
+  begin
+    if (ShopTasks[i].current_operation = Stage_Finished)
+       and (not TasksReportadas[i]) then
+    begin
+      task := ShopTasks[i];
+      hora := FormatDateTime('[hh:nn:ss]', Now);
+
+      case task.task_type of
+        Type_Expedition: descricao := hora + '  EXPEDIÇÃO  —  ' + TraduzirPeca(task.part_type);
+        Type_Delivery:   descricao := hora + '  INBOUND    —  ' + TraduzirPeca(task.part_type);
+        Type_Production: descricao := hora + '  PRODUÇÃO   —  ' + TraduzirPeca(task.part_type);
+        else             descricao := hora + '  OUTRO';
+      end;
+
+      lstHistorico.Items.Add(descricao);
+
+      // Auto-scroll para a última linha
+      lstHistorico.TopIndex := lstHistorico.Items.Count - 1;
+
+      TasksReportadas[i] := True;
+    end;
+  end;
+end;
+
 //----------------------------- Fim código interno -----------------------------
 
 //******************************************************************************
@@ -2286,6 +2395,10 @@ begin
   // Usamos a função do professor para transformar estas ordens nas "Stages" da máquina de estados
   SimpleScheduler(Production_Orders, ShopTasks);
 
+  //Varaivel Global TasksReportadas (redimensionar e limpa-la)
+  SetLength(TasksReportadas, Length(ShopTasks));
+  FillChar(TasksReportadas[0], Length(TasksReportadas), 0);
+
   // Ligar o "motor" (se não estivesse já ligado)
   Timer1.Enabled := true;
 
@@ -2470,6 +2583,8 @@ begin
   Total_Defeitos := dBaseAzul + dBaseVerde + dBaseCinza + dTampaAzul + dTampaVerde + dTampaCinza;
 
   LogMsg('QUALIDADE: Tabela de análise atualizada com ' + IntToStr(lstDefeito.Items.Count) + ' registo(s) de defeito.');
+
+  Atualizar_Custos; //Atualiza o label de Custo Total
 end;
 
 
