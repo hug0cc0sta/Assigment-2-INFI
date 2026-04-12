@@ -1780,10 +1780,17 @@ begin
   // 3. Custo do Tempo de Máquina (2€ por segundo nas Células 1 e 2)
   Custo_Maquinas := (Cell1_Op_Total + Cell2_Op_Total) * 2.0;
 
-  // 4. Custo da Espera no Armazém (6€ por segundo no gargalo)
-  Custo_Espera := AR_Wait_Total * 6.0;
+  // 4. Custo da Espera no Armazém (6€ por segundo de tempo médio no gargalo)
+  if AR_Wait_Count > 0 then
+     begin
+          Custo_Espera := (AR_Wait_Total / AR_Wait_Count) * 6.0;
+     end
+  else
+     begin
+          Custo_Espera := 0; // Ou outro valor padrão, caso ainda não existam dados
+     end;
 
-  // 5. Custo de Defeitos (4€ por peça - valor atualizado via Análise de Dados)
+  // 5. Custo de Defeitos (4€ por peça - valor atualizado via o forms de Defeitos)
   Custo_Defeitos := Total_Defeitos * 4.0;
 
   // 6. O Somatório Final
