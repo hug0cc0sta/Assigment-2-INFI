@@ -100,6 +100,8 @@ type
     cbCorDefeito: TComboBox;
     edtQuantidadeDefeito: TEdit;
     GroupBox1: TGroupBox;
+    GroupBox10: TGroupBox;
+    GroupBox11: TGroupBox;
     GroupBox2: TGroupBox;
     GroupBox3: TGroupBox;
     GroupBox4: TGroupBox;
@@ -107,12 +109,14 @@ type
     GroupBox6: TGroupBox;
     GroupBox7: TGroupBox;
     GroupBox8: TGroupBox;
+    GroupBox9: TGroupBox;
     Image1: TImage;
     Image2: TImage;
     Image3: TImage;
     Image4: TImage;
     Image5: TImage;
     Image6: TImage;
+    Image7: TImage;
     imgLogo: TImage;
     Label1: TLabel;
     Label10: TLabel;
@@ -141,7 +145,20 @@ type
     Label33: TLabel;
     Label34: TLabel;
     Label35: TLabel;
+    Label36: TLabel;
+    Label37: TLabel;
+    Label38: TLabel;
+    Label39: TLabel;
     Label40: TLabel;
+    lblCustoTotal: TLabel;
+    lblEmProcessamento: TLabel;
+    lblTapeteInbound: TLabel;
+    lblTapeteEntradaAR: TLabel;
+    lblTapeteSaidaAR: TLabel;
+    lblEstadoCel2: TLabel;
+    lblPecaCel2: TLabel;
+    lblEstadoCel1: TLabel;
+    lblPecaCel1: TLabel;
     lblScadaLotacao: TLabel;
     lblScadaTempoBraco: TLabel;
     lblScadaTempoPlano: TLabel;
@@ -154,20 +171,7 @@ type
     lblArmazemTampaAzul: TLabel;
     lblArmazemTampaCinza: TLabel;
     lblArmazemTampaVerde: TLabel;
-    lblCustoTotal: TLabel;
     lblScadaUtilizacao: TLabel;
-    lblTempoInbound: TLabel;
-    Label36: TLabel;
-    Label37: TLabel;
-    Label38: TLabel;
-    Label39: TLabel;
-    lblTempoEsperaAR: TLabel;
-    lblTempoCell1: TLabel;
-    lblTempoCell2: TLabel;
-    lblTempoAR: TLabel;
-    lblTotalRecebidas: TLabel;
-    lblEmProcessamento: TLabel;
-    lblTotalExpedidas: TLabel;
     labelRelogio: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -177,6 +181,13 @@ type
     Label7: TLabel;
     Label8: TLabel;
     Label9: TLabel;
+    lblTempoAR: TLabel;
+    lblTempoCell1: TLabel;
+    lblTempoCell2: TLabel;
+    lblTempoEsperaAR: TLabel;
+    lblTempoInbound: TLabel;
+    lblTotalExpedidas: TLabel;
+    lblTotalRecebidas: TLabel;
     lstDefeito: TListBox;
     lstPlano: TListBox;
     memLogger: TMemo;
@@ -195,6 +206,9 @@ type
     Shape4: TShape;
     Shape5: TShape;
     Shape6: TShape;
+    Shape7: TShape;
+    shpLedCel1: TShape;
+    shpLedCel2: TShape;
     shpStatusBraco: TShape;
     shpStatusPLC: TShape;
     spnMatAzul: TSpinEdit;
@@ -210,13 +224,13 @@ type
     spnTampaVerde: TSpinEdit;
     spnTampaCinza: TSpinEdit;
     StaticText1: TStaticText;
+    StaticText2: TStaticText;
     StringGrid1: TStringGrid;
     sgArmazem: TStringGrid;
     TabSheet1: TTabSheet;
     TabSheet10: TTabSheet;
+    TabSheet11: TTabSheet;
     TabSheet2: TTabSheet;
-    TabSheet3: TTabSheet;
-    TabSheet4: TTabSheet;
     TabSheet5: TTabSheet;
     TabSheet6: TTabSheet;
     TabSheet7: TTabSheet;
@@ -224,47 +238,6 @@ type
     TabSheet8: TTabSheet;
     TabSheet9: TTabSheet;
     Timer1: TTimer;
-    scadaScroll: TScrollBox;
-    pnlScadaContent: TPanel;
-    lblScadaHead: TLabel;
-    lblScadaConn: TLabel;
-    lblScadaImgHint: TLabel;
-    gbScadaGeral: TGroupBox;
-    lblScadaFio: TLabel;
-    lblScadaInbound: TLabel;
-    lblScadaWH: TLabel;
-    lblScadaInConv: TLabel;
-    lblScadaOutConv: TLabel;
-    lblScadaCell1: TLabel;
-    lblScadaCell2: TLabel;
-    gbScadaArm: TGroupBox;
-    shpScadaInboundLamp: TShape;
-    lblScadaInboundL: TLabel;
-    shpScadaARLamp: TShape;
-    lblScadaARL: TLabel;
-    lblScadaARInPart: TLabel;
-    lblScadaAROutPart: TLabel;
-    lblScadaPNP: TLabel;
-    gbScadaCells: TGroupBox;
-    lblScadaRobot1: TLabel;
-    lblScadaRobot2: TLabel;
-    gbScadaKPI: TGroupBox;
-    lblScadaKPIReceb: TLabel;
-    lblScadaKPIExped: TLabel;
-    lblScadaKPIProc: TLabel;
-    lblScadaKPICusto: TLabel;
-    gbScadaDiagram: TGroupBox;
-    lblScadaWaitingParts: TLabel;
-    pnlScadaVisual: TPanel;
-    imgScadaPlanta: TImage;
-    shpOvLedInbound: TShape;
-    shpOvLedAR: TShape;
-    lblOvInbound: TLabel;
-    lblOvArmazem: TLabel;
-    lblOvCell1: TLabel;
-    lblOvCell2: TLabel;
-    lblOvPnP: TLabel;
-    lblOvLegenda: TLabel;
     procedure BExecuteClick(Sender: TObject);
     procedure BInitiatilizeClick(Sender: TObject);
     procedure BStartClick(Sender: TObject);
@@ -279,16 +252,12 @@ type
     procedure FormCreate(Sender: TObject);
     procedure sgArmazemDrawCell(Sender: TObject; aCol, aRow: Integer;
       aRect: TRect; aState: TGridDrawState);
+    procedure Shape7Click(Sender: TObject);
     procedure Timer1Timer(Sender: TObject);
     procedure btnAdicionarDefeitoClick(Sender: TObject);
     procedure btnDefeitosLimparClick(Sender: TObject);
     procedure btnDefeitoConfirmarClick(Sender: TObject);
-    procedure pnlScadaVisualResize(Sender: TObject);
   private
-    procedure Atualizar_SCADA_Analise;
-    procedure CarregarImagemScada;
-    procedure LayoutScadaOverlays;
-    procedure AtualizarScadaOverlaysVisuais(const sf: TResources; const st: status_values; plcOk: Boolean);
   public
     procedure Dispatcher(var tasks:TArray_Task; {var idx : integer;} shopfloor: TResources );    //Comentado para fazer mais que uma tarefa ao mesmo tempo
     procedure Execute_Expedition_Order(var task:TTask; shopfloor: TResources );
@@ -320,6 +289,8 @@ type
     //Scada Estantes Armazem
     function TraduzirPeca(codigo: integer): string;
     procedure Atualizar_Matriz_Armazem;
+
+    procedure Atualizar_SCADA_Modular; //Sinotico scada
 
   end;
 
@@ -415,60 +386,6 @@ implementation
 
 {$R *.lfm}
 
-function PartCodeToStr(const Code: Integer): string;
-begin
-  case Code of
-    0: Result := '—';
-    Part_Raw_Blue: Result := 'MP Azul';
-    Part_Raw_Green: Result := 'MP Verde';
-    Part_Raw_Grey: Result := 'MP Cinza';
-    Part_Base_Blue: Result := 'Base Azul';
-    Part_Base_Green: Result := 'Base Verde';
-    Part_Base_Grey: Result := 'Base Cinza';
-    Part_Lid_Blue: Result := 'Tampa Azul';
-    Part_Lid_Green: Result := 'Tampa Verde';
-    Part_Lid_Grey: Result := 'Tampa Cinza';
-  else
-    Result := 'Código ' + IntToStr(Code);
-  end;
-end;
-
-function PartCodeToStrRes(const Code: Integer): string;
-begin
-  if Code = -1 then
-    Result := '(reservado entrada)'
-  else if Code = -2 then
-    Result := '(reservado saída)'
-  else
-    Result := PartCodeToStr(Code);
-end;
-
-function Scada_CountTarefasNaoFinalizadas: Integer;
-var
-  i: Integer;
-begin
-  Result := 0;
-  for i := 0 to Length(ShopTasks) - 1 do
-    if ShopTasks[i].current_operation <> Stage_Finished then
-      Inc(Result);
-end;
-
-procedure Scada_CountReservasArmazem(out nEntrada, nSaida: Integer);
-var
-  i: Integer;
-begin
-  nEntrada := 0;
-  nSaida := 0;
-  if Length(WAREHOUSE_Parts) < 2 then
-    Exit;
-  for i := 1 to Length(WAREHOUSE_Parts) - 1 do
-  begin
-    if WAREHOUSE_Parts[i] = -1 then
-      Inc(nEntrada)
-    else if WAREHOUSE_Parts[i] = -2 then
-      Inc(nSaida);
-  end;
-end;
 
 //******************************************************************************
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -787,8 +704,6 @@ begin
   SetLength(ShopTasks, 0);
   idx_Task_Executing := 0;
   Self.DoubleBuffered := True;
-  CarregarImagemScada;
-  LayoutScadaOverlays;
 end;
 
 procedure TFormDispatcher.sgArmazemDrawCell(Sender: TObject; aCol,
@@ -903,6 +818,12 @@ begin
   sgArmazem.Canvas.Frame(aRect);
 end;
 
+procedure TFormDispatcher.Shape7Click(Sender: TObject);
+begin
+  PageControl1.ActivePage := TabSheet10;
+
+end;
+
 
 
 procedure TFormDispatcher.Timer1Timer(Sender: TObject);
@@ -916,17 +837,17 @@ begin
   // Se o botão ainda diz "CONECTAR PLC", o código pára aqui e sai da procedure.
   if btnPLC.Caption = 'CONECTAR PLC' then
   begin
-    Atualizar_SCADA_Analise;
     Exit;
   end;
 
   BExecuteClick(Self);
 
-  Atualizar_SCADA_Analise;
 
   Atualizar_SCADA_Armazem; //Atualiza a cada segundo o armazem
 
-  Atualizar_Matriz_Armazem; // A TUA NOVA MATRIZ VISUAL EM TEMPO REAL!
+  Atualizar_Matriz_Armazem; // MATRIZ VISUAL EM TEMPO REAL!
+
+  Atualizar_SCADA_Modular; //Atualiza em tempo real o novo scada
 
   UpdateMachineTimers(ShopResources);// Atualiza os cronómetros
   Atualizar_Custos; //O Custo sobe em tempo real!
@@ -1654,6 +1575,8 @@ procedure TFormDispatcher.UpdateMachineTimers(shopfloor: TResources);
 var
   Now_T      : TDateTime;
   ElapsedSec : Double;
+  espacos_ocupados: integer; // <--- ADICIONAR AQUI
+  j: integer;                // <--- ADICIONAR AQUI
 
   function SecsElapsed(T1, T2: TDateTime): Double;
   begin
@@ -1827,18 +1750,16 @@ begin
     FormDispatcher.lblScadaUtilizacao.Caption := 'Taxa de Utilização: 0.0 %';
 
   // 5. A Métrica Bónus: Ocupação do Armazém (%)
-  // Temos 54 posições. Quantas estão cheias?
-  // (Total_Recebidas e Total_Expedidas podem não refletir o estado exato da grelha,
-  // mas como o teu armazém arranca com 4 peças no stock inicial e cabem 54:)
   if Length(WAREHOUSE_Parts) > 0 then
   begin
-    var espacos_ocupados: integer = 0;
-    var j: integer;
+    espacos_ocupados := 0; // Apenas inicia a variável a zero
+
     for j := 1 to 54 do
     begin
       if WAREHOUSE_Parts[j] > 0 then
         Inc(espacos_ocupados);
     end;
+
     FormDispatcher.lblScadaLotacao.Caption := 'Ocupação do Armazém: ' + FormatFloat('0.0', (espacos_ocupados / 54.0) * 100) + ' %';
   end;
 
@@ -1917,212 +1838,57 @@ begin
   end;
 end;
 
+// ==========================================================================
+// SCADA MODULAR - ESTADO DA FÁBRICA EM TEMPO REAL
+// ==========================================================================
+procedure TFormDispatcher.Atualizar_SCADA_Modular;
+begin
+  // --- ZONA 1: CÉLULA 1 (Máquina das Bases) ---
+  if ShopResources.Robot_1_Part > 0 then
+  begin
+    shpLedCel1.Brush.Color := clRed; // LED Vermelho = A trabalhar
+    lblEstadoCel1.Caption := 'Estado: EM OPERAÇÃO';
+    lblPecaCel1.Caption := 'Peça Atual: ' + TraduzirPeca(ShopResources.Robot_1_Part);
+  end
+  else
+  begin
+    shpLedCel1.Brush.Color := clLime; // LED Verde = Livre
+    lblEstadoCel1.Caption := 'Estado: LIVRE';
+    lblPecaCel1.Caption := 'Peça Atual: [ Nenhuma ]';
+  end;
+
+  // --- ZONA 2: CÉLULA 2 (Máquina das Tampas) ---
+  if ShopResources.Robot_2_Part > 0 then
+  begin
+    shpLedCel2.Brush.Color := clRed;
+    lblEstadoCel2.Caption := 'Estado: EM OPERAÇÃO';
+    lblPecaCel2.Caption := 'Peça Atual: ' + TraduzirPeca(ShopResources.Robot_2_Part);
+  end
+  else
+  begin
+    shpLedCel2.Brush.Color := clLime;
+    lblEstadoCel2.Caption := 'Estado: LIVRE';
+    lblPecaCel2.Caption := 'Peça Atual: [ Nenhuma ]';
+  end;
+
+  // --- ZONA 3: LOGÍSTICA E TAPETES ---
+  if ShopResources.Inbound_free then
+    lblTapeteInbound.Caption := 'Tapete Inbound: [ Livre ]'
+  else
+    lblTapeteInbound.Caption := 'Tapete Inbound: OCUPADO (A receber)';
+
+  if ShopResources.AR_In_Part > 0 then
+    lblTapeteEntradaAR.Caption := 'Entrada Armazém: ' + TraduzirPeca(ShopResources.AR_In_Part) + ' (A aguardar braço)'
+  else
+    lblTapeteEntradaAR.Caption := 'Entrada Armazém: [ Livre ]';
+
+  if ShopResources.AR_Out_Part > 0 then
+    lblTapeteSaidaAR.Caption := 'Saída Armazém: ' + TraduzirPeca(ShopResources.AR_Out_Part) + ' (Em trânsito)'
+  else
+    lblTapeteSaidaAR.Caption := 'Saída Armazém: [ Livre ]';
+end;
+
 //----------------------------- Fim código interno -----------------------------
-
-
-procedure TFormDispatcher.Atualizar_SCADA_Analise;
-var
-  st: status_values;
-  sf: TResources;
-  Custo_Materias, Custo_Expedicoes, Custo_Maquinas, Custo_Espera, Custo_Defeitos, Custo_Total: Double;
-  planoAtivo: Boolean;
-  rIn, rOut, nTarefas: Integer;
-  sEspera: string;
-begin
-  if M_Connection_Status() <= 0 then
-  begin
-    lblScadaConn.Caption := 'Ligação: desligada — use "CONECTAR PLC" no cabeçalho.';
-    shpScadaInboundLamp.Brush.Color := clGray;
-    shpScadaARLamp.Brush.Color := clGray;
-    lblScadaWaitingParts.Caption :=
-      'Peças / fila à espera: ligue o PLC para ver reservas do armazém e tarefas em tempo real.';
-    FillChar(sf, SizeOf(sf), 0);
-    AtualizarScadaOverlaysVisuais(sf, LastPLCStatus, False);
-    Exit;
-  end;
-
-  sf := ShopResources;
-  st := LastPLCStatus;
-
-  planoAtivo := Timer1.Enabled and (Length(ShopTasks) > 0);
-  if planoAtivo then
-    lblScadaConn.Caption := 'Ligação: ativa • plano MES em execução'
-  else
-    lblScadaConn.Caption := 'Ligação: ativa • sem plano ativo';
-
-  lblScadaFio.Caption := 'Factory I/O (código bruto): ' + IntToStr(st[1]);
-  lblScadaInbound.Caption := 'Inbound (raw): ' + IntToStr(st[2]);
-  lblScadaWH.Caption := 'Armazém (raw): ' + IntToStr(st[3]);
-  lblScadaInConv.Caption := 'Tapete entrada AR (código PLC): ' + IntToStr(st[4]);
-  lblScadaOutConv.Caption := 'Tapete saída AR (código PLC): ' + IntToStr(st[5]);
-  lblScadaCell1.Caption := 'Célula 1 — código: ' + IntToStr(st[6]);
-  lblScadaCell2.Caption := 'Célula 2 — código: ' + IntToStr(st[7]);
-  lblScadaPNP.Caption := 'Pick & Place: ' + PartCodeToStr(st[8]);
-
-  if sf.Inbound_free then
-    shpScadaInboundLamp.Brush.Color := clLime
-  else
-    shpScadaInboundLamp.Brush.Color := clRed;
-  if sf.AR_free then
-    shpScadaARLamp.Brush.Color := clLime
-  else
-    shpScadaARLamp.Brush.Color := clRed;
-
-  lblScadaARInPart.Caption := 'Peça à entrada: ' + PartCodeToStrRes(sf.AR_In_Part);
-  lblScadaAROutPart.Caption := 'Peça à saída: ' + PartCodeToStrRes(sf.AR_Out_Part);
-
-  if sf.Robot_1_Part > 0 then
-    lblScadaRobot1.Caption := 'Robot 1 (bases): ' + PartCodeToStr(sf.Robot_1_Part) + ' — em operação'
-  else
-    lblScadaRobot1.Caption := 'Robot 1 (bases): sem peça — aguardando';
-
-  if sf.Robot_2_Part > 0 then
-    lblScadaRobot2.Caption := 'Robot 2 (tampas): ' + PartCodeToStr(sf.Robot_2_Part) + ' — em operação'
-  else
-    lblScadaRobot2.Caption := 'Robot 2 (tampas): sem peça — aguardando';
-
-  lblScadaKPIReceb.Caption := 'Matérias recebidas: ' + IntToStr(Total_Recebidas);
-  lblScadaKPIExped.Caption := 'Peças expedidas: ' + IntToStr(Total_Expedidas);
-  lblScadaKPIProc.Caption := 'Em processamento: ' + IntToStr(Em_Processamento);
-
-  Custo_Materias := (Inbound_MP_Azul * 1.0) + (Inbound_MP_Verde * 4.0) + (Inbound_MP_Cinza * 1.0);
-  Custo_Expedicoes := Total_Expedidas * 3.0;
-  Custo_Maquinas := (Cell1_Op_Total + Cell2_Op_Total) * 2.0;
-  Custo_Espera := AR_Wait_Total * 6.0;
-  Custo_Defeitos := Total_Defeitos * 4.0;
-  Custo_Total := Custo_Materias + Custo_Expedicoes + Custo_Maquinas + Custo_Espera + Custo_Defeitos;
-  lblScadaKPICusto.Caption := 'Custo acumulado (estim.): ' + FormatFloat('0.00', Custo_Total) + ' €';
-
-  Scada_CountReservasArmazem(rIn, rOut);
-  nTarefas := Scada_CountTarefasNaoFinalizadas;
-  sEspera := Format(
-    'Peças / fila à espera: %d tarefa(s) MES ativa(s) ou por concluir | reservas armazém: %d entrada / %d saída | em produção (ciclo): %d',
-    [nTarefas, rIn, rOut, Em_Processamento]);
-  if (sf.AR_In_Part > 0) and (not sf.AR_free) then
-    sEspera := sEspera + ' | Gargalo: peça no tapete de entrada com braço AR ocupado.'
-  else if (sf.AR_In_Part > 0) and Entrada_AR_Reclamada then
-    sEspera := sEspera + ' | Peça à entrada: à espera do braço para carga no armazém.'
-  else if sf.AR_In_Part > 0 then
-    sEspera := sEspera + ' | Peça no tapete de entrada do AR.';
-  if not sf.Inbound_free then
-    sEspera := sEspera + ' | Inbound ocupado (MP a ser tratado).';
-  lblScadaWaitingParts.Caption := sEspera;
-
-  AtualizarScadaOverlaysVisuais(sf, st, True);
-end;
-
-procedure TFormDispatcher.CarregarImagemScada;
-const
-  IMG = 'scada_planta.png';
-var
-  fn: string;
-begin
-  if not Assigned(imgScadaPlanta) then
-    Exit;
-  imgScadaPlanta.Picture.Clear;
-  fn := ExtractFilePath(ParamStr(0)) + IMG;
-  if not FileExists(fn) then
-    fn := IncludeTrailingPathDelimiter(GetCurrentDir) + IMG;
-  if not FileExists(fn) then
-    fn := ExtractFilePath(Application.ExeName) + IMG;
-  if not FileExists(fn) then
-    fn := IncludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)) + 'images') + IMG;
-  if FileExists(fn) then
-  try
-    imgScadaPlanta.Picture.LoadFromFile(fn);
-  except
-  end;
-  if Assigned(lblScadaImgHint) then
-    lblScadaImgHint.Visible := imgScadaPlanta.Picture.Graphic = nil;
-end;
-
-procedure TFormDispatcher.LayoutScadaOverlays;
-var
-  W, H: Integer;
-
-  procedure Place(C: TControl; cx, cy: Double; cw, ch: Integer);
-  begin
-    C.SetBounds(Round(cx * W - cw div 2), Round(cy * H - ch div 2), cw, ch);
-  end;
-
-begin
-  if not Assigned(pnlScadaVisual) then
-    Exit;
-  W := pnlScadaVisual.ClientWidth;
-  H := pnlScadaVisual.ClientHeight;
-  if (W < 100) or (H < 100) then
-    Exit;
-
-  Place(shpOvLedInbound, 0.50, 0.065, 22, 22);
-  Place(lblOvInbound, 0.52, 0.135, 168, 54);
-  Place(shpOvLedAR, 0.175, 0.38, 22, 22);
-  Place(lblOvArmazem, 0.20, 0.50, 236, 82);
-  Place(lblOvCell1, 0.675, 0.175, 172, 56);
-  Place(lblOvCell2, 0.835, 0.175, 172, 56);
-  Place(lblOvPnP, 0.735, 0.575, 200, 58);
-  Place(lblOvLegenda, 0.72, 0.935, 420, 36);
-end;
-
-procedure TFormDispatcher.pnlScadaVisualResize(Sender: TObject);
-begin
-  LayoutScadaOverlays;
-end;
-
-procedure TFormDispatcher.AtualizarScadaOverlaysVisuais(const sf: TResources; const st: status_values;
-  plcOk: Boolean);
-var
-  sEnt, sSai: string;
-begin
-  if not plcOk then
-  begin
-    shpOvLedInbound.Brush.Color := clGray;
-    shpOvLedAR.Brush.Color := clGray;
-    lblOvInbound.Caption := 'Entrada MP (Inbound)' + LineEnding + '—';
-    lblOvArmazem.Caption := 'Armazém automático' + LineEnding + '—' + LineEnding + '—';
-    lblOvCell1.Caption := 'Célula 1 · Bases' + LineEnding + '—';
-    lblOvCell2.Caption := 'Célula 2 · Tampas' + LineEnding + '—';
-    lblOvPnP.Caption := 'Pick && Place' + LineEnding + '—';
-    Exit;
-  end;
-
-  if sf.Inbound_free then
-    shpOvLedInbound.Brush.Color := clLime
-  else
-    shpOvLedInbound.Brush.Color := clRed;
-  if sf.AR_free then
-    shpOvLedAR.Brush.Color := clLime
-  else
-    shpOvLedAR.Brush.Color := clRed;
-
-  if sf.Inbound_free then
-    lblOvInbound.Caption := 'Entrada MP (Inbound)' + LineEnding + 'Livre'
-  else
-    lblOvInbound.Caption := 'Entrada MP (Inbound)' + LineEnding + 'Ocupado — MP a entrar';
-
-  sEnt := PartCodeToStrRes(sf.AR_In_Part);
-  sSai := PartCodeToStrRes(sf.AR_Out_Part);
-  if Length(sEnt) > 28 then
-    sEnt := Copy(sEnt, 1, 26) + '…';
-  if Length(sSai) > 28 then
-    sSai := Copy(sSai, 1, 26) + '…';
-  lblOvArmazem.Caption := 'Armazém automático (AR)' + LineEnding + 'Entrada: ' + sEnt + LineEnding +
-    'Saída: ' + sSai;
-
-  if sf.Robot_1_Part > 0 then
-    lblOvCell1.Caption := 'Célula 1 · Bases (MR1)' + LineEnding + PartCodeToStr(sf.Robot_1_Part) +
-      ' · em ciclo'
-  else
-    lblOvCell1.Caption := 'Célula 1 · Bases (MR1)' + LineEnding + 'Aguardando peça';
-
-  if sf.Robot_2_Part > 0 then
-    lblOvCell2.Caption := 'Célula 2 · Tampas (MR2)' + LineEnding + PartCodeToStr(sf.Robot_2_Part) +
-      ' · em ciclo'
-  else
-    lblOvCell2.Caption := 'Célula 2 · Tampas (MR2)' + LineEnding + 'Aguardando peça';
-
-  lblOvPnP.Caption := 'Pick && Place / triagem' + LineEnding + 'Peça: ' + PartCodeToStr(st[8]);
-end;
-
 
 //******************************************************************************
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
