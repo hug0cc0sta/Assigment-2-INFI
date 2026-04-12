@@ -2470,6 +2470,8 @@ begin
   Total_Defeitos := dBaseAzul + dBaseVerde + dBaseCinza + dTampaAzul + dTampaVerde + dTampaCinza;
 
   LogMsg('QUALIDADE: Tabela de análise atualizada com ' + IntToStr(lstDefeito.Items.Count) + ' registo(s) de defeito.');
+
+  Atualizar_Custos; //Atualiza o label de Custo Total
 end;
 
 

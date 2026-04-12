@@ -1784,7 +1784,7 @@ begin
   if AR_Wait_Count > 0 then
      begin
           Custo_Espera := (AR_Wait_Total / AR_Wait_Count) * 6.0;
-     end;
+     end
   else
      begin
           Custo_Espera := 0; // Ou outro valor padrão, caso ainda não existam dados
