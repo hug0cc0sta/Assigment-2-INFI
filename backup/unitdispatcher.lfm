@@ -1,7 +1,7 @@
 object FormDispatcher: TFormDispatcher
-  Left = 316
+  Left = 308
   Height = 638
-  Top = 146
+  Top = 128
   Width = 1281
   Caption = 'Dispatcher'
   ClientHeight = 638
@@ -14,11 +14,11 @@ object FormDispatcher: TFormDispatcher
     Height = 534
     Top = 80
     Width = 1281
-    ActivePage = TabSheet2
+    ActivePage = TabSheet10
     Align = alClient
     Font.Style = [fsBold]
     ParentFont = False
-    TabIndex = 2
+    TabIndex = 5
     TabOrder = 0
     object TabSheet5: TTabSheet
       Caption = 'Info'
@@ -4442,80 +4442,6 @@ object FormDispatcher: TFormDispatcher
           'Defeituoso'
         )
       end
-      object GroupBox1: TGroupBox
-        Left = 518
-        Height = 136
-        Top = 64
-        Width = 392
-        Caption = 'Estado do Armazém'
-        ClientHeight = 116
-        ClientWidth = 388
-        ParentBackground = False
-        TabOrder = 2
-        object lblArmazemMatAzul: TLabel
-          Left = 32
-          Height = 15
-          Top = 16
-          Width = 83
-          Caption = 'Matéria Azul: 0'
-        end
-        object lblArmazemMatVerde: TLabel
-          Left = 32
-          Height = 15
-          Top = 49
-          Width = 92
-          Caption = 'Matéria Verde: 0'
-        end
-        object lblArmazemMatCinza: TLabel
-          Left = 32
-          Height = 15
-          Top = 83
-          Width = 88
-          Caption = 'Matéria Cinza: 0'
-        end
-        object lblArmazemTampaAzul: TLabel
-          Left = 272
-          Height = 15
-          Top = 16
-          Width = 76
-          Caption = 'Tampa Azul: 0'
-        end
-        object lblArmazemTampaVerde: TLabel
-          Left = 272
-          Height = 15
-          Top = 49
-          Width = 85
-          Caption = 'Tampa Verde: 0'
-        end
-        object lblArmazemTampaCinza: TLabel
-          Left = 272
-          Height = 15
-          Top = 83
-          Width = 81
-          Caption = 'Tampa Cinza: 0'
-        end
-        object lblArmazemBaseAzul: TLabel
-          Left = 160
-          Height = 15
-          Top = 16
-          Width = 66
-          Caption = 'Base Azul: 0'
-        end
-        object lblArmazemBaseVerde: TLabel
-          Left = 160
-          Height = 15
-          Top = 49
-          Width = 75
-          Caption = 'Base Verde: 0'
-        end
-        object lblArmazemBaseCinza: TLabel
-          Left = 160
-          Height = 15
-          Top = 83
-          Width = 71
-          Caption = 'Base Cinza: 0'
-        end
-      end
       object GroupBox5: TGroupBox
         Left = 518
         Height = 136
@@ -4525,7 +4451,7 @@ object FormDispatcher: TFormDispatcher
         ClientHeight = 116
         ClientWidth = 162
         ParentBackground = False
-        TabOrder = 3
+        TabOrder = 2
         object lblTotalRecebidas: TLabel
           Left = 8
           Height = 15
@@ -4557,7 +4483,7 @@ object FormDispatcher: TFormDispatcher
         ClientHeight = 172
         ClientWidth = 246
         ParentBackground = False
-        TabOrder = 4
+        TabOrder = 3
         object lblTempoAR: TLabel
           Left = 198
           Height = 15
@@ -4638,7 +4564,7 @@ object FormDispatcher: TFormDispatcher
         ClientHeight = 223
         ClientWidth = 482
         ParentBackground = False
-        TabOrder = 5
+        TabOrder = 4
         object Label33: TLabel
           Left = 14
           Height = 15
@@ -5235,6 +5161,162 @@ object FormDispatcher: TFormDispatcher
     end
     object TabSheet4: TTabSheet
       Caption = 'Under Construction...'
+    end
+    object TabSheet10: TTabSheet
+      Caption = 'Visão do Armazém'
+      ClientHeight = 506
+      ClientWidth = 1273
+      object sgArmazem: TStringGrid
+        Left = 8
+        Height = 424
+        Top = 40
+        Width = 816
+        ColCount = 9
+        DefaultColWidth = 90
+        DefaultDrawing = False
+        DefaultRowHeight = 70
+        FixedCols = 0
+        FixedRows = 0
+        RowCount = 6
+        TabOrder = 0
+        OnDrawCell = sgArmazemDrawCell
+      end
+      object GroupBox1: TGroupBox
+        Left = 840
+        Height = 136
+        Top = 40
+        Width = 392
+        Caption = 'Contagem Armazém'
+        ClientHeight = 116
+        ClientWidth = 388
+        ParentBackground = False
+        TabOrder = 1
+        object lblArmazemMatAzul: TLabel
+          Left = 32
+          Height = 15
+          Top = 16
+          Width = 83
+          Caption = 'Matéria Azul: 0'
+        end
+        object lblArmazemMatVerde: TLabel
+          Left = 32
+          Height = 15
+          Top = 49
+          Width = 92
+          Caption = 'Matéria Verde: 0'
+        end
+        object lblArmazemMatCinza: TLabel
+          Left = 32
+          Height = 15
+          Top = 83
+          Width = 88
+          Caption = 'Matéria Cinza: 0'
+        end
+        object lblArmazemTampaAzul: TLabel
+          Left = 272
+          Height = 15
+          Top = 16
+          Width = 76
+          Caption = 'Tampa Azul: 0'
+        end
+        object lblArmazemTampaVerde: TLabel
+          Left = 272
+          Height = 15
+          Top = 49
+          Width = 85
+          Caption = 'Tampa Verde: 0'
+        end
+        object lblArmazemTampaCinza: TLabel
+          Left = 272
+          Height = 15
+          Top = 83
+          Width = 81
+          Caption = 'Tampa Cinza: 0'
+        end
+        object lblArmazemBaseAzul: TLabel
+          Left = 160
+          Height = 15
+          Top = 16
+          Width = 66
+          Caption = 'Base Azul: 0'
+        end
+        object lblArmazemBaseVerde: TLabel
+          Left = 160
+          Height = 15
+          Top = 49
+          Width = 75
+          Caption = 'Base Verde: 0'
+        end
+        object lblArmazemBaseCinza: TLabel
+          Left = 160
+          Height = 15
+          Top = 83
+          Width = 71
+          Caption = 'Base Cinza: 0'
+        end
+      end
+      object StaticText1: TStaticText
+        Left = 856
+        Height = 48
+        Top = 416
+        Width = 320
+        Align = alCustom
+        Alignment = taCenter
+        Caption = 'BRAÇO MECÂNICO'
+        Color = clFuchsia
+        Font.Color = clPurple
+        Font.Height = -27
+        Font.Style = [fsBold]
+        ParentFont = False
+        ParentColor = False
+        TabOrder = 2
+      end
+      object shpStatusBraco: TShape
+        Left = 1176
+        Height = 48
+        Top = 416
+        Width = 56
+        Shape = stCircle
+      end
+      object GroupBox8: TGroupBox
+        Left = 840
+        Height = 184
+        Top = 200
+        Width = 392
+        Caption = 'KPIs'
+        ClientHeight = 164
+        ClientWidth = 388
+        ParentBackground = False
+        TabOrder = 3
+        object lblScadaTempoPlano: TLabel
+          Left = 32
+          Height = 15
+          Top = 56
+          Width = 149
+          Caption = 'Tempo Total do Plano: 0.0 s'
+        end
+        object lblScadaUtilizacao: TLabel
+          Left = 32
+          Height = 15
+          Top = 136
+          Width = 122
+          Caption = 'Taxa de Utilização: 0%'
+        end
+        object lblScadaTempoBraco: TLabel
+          Left = 32
+          Height = 15
+          Top = 96
+          Width = 188
+          Caption = 'Tempo de Trabalho do Braço: 0.0 s'
+        end
+        object lblScadaLotacao: TLabel
+          Left = 32
+          Height = 15
+          Top = 16
+          Width = 151
+          Caption = 'Ocupação do Armazém: 0%'
+        end
+      end
     end
   end
   object Header: TPanel

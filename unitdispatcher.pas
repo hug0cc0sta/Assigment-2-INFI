@@ -7,7 +7,7 @@ interface
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   Menus, ComCtrls, Buttons, Spin, Grids, ValEdit,
-  comUnit;
+  comUnit, Types;
 
 type
 
@@ -106,6 +106,7 @@ type
     GroupBox5: TGroupBox;
     GroupBox6: TGroupBox;
     GroupBox7: TGroupBox;
+    GroupBox8: TGroupBox;
     Image1: TImage;
     Image2: TImage;
     Image3: TImage;
@@ -141,7 +142,20 @@ type
     Label34: TLabel;
     Label35: TLabel;
     Label40: TLabel;
+    lblScadaLotacao: TLabel;
+    lblScadaTempoBraco: TLabel;
+    lblScadaTempoPlano: TLabel;
+    lblArmazemBaseAzul: TLabel;
+    lblArmazemBaseCinza: TLabel;
+    lblArmazemBaseVerde: TLabel;
+    lblArmazemMatAzul: TLabel;
+    lblArmazemMatCinza: TLabel;
+    lblArmazemMatVerde: TLabel;
+    lblArmazemTampaAzul: TLabel;
+    lblArmazemTampaCinza: TLabel;
+    lblArmazemTampaVerde: TLabel;
     lblCustoTotal: TLabel;
+    lblScadaUtilizacao: TLabel;
     lblTempoInbound: TLabel;
     Label36: TLabel;
     Label37: TLabel;
@@ -154,15 +168,6 @@ type
     lblTotalRecebidas: TLabel;
     lblEmProcessamento: TLabel;
     lblTotalExpedidas: TLabel;
-    lblArmazemMatAzul: TLabel;
-    lblArmazemMatVerde: TLabel;
-    lblArmazemMatCinza: TLabel;
-    lblArmazemTampaAzul: TLabel;
-    lblArmazemTampaVerde: TLabel;
-    lblArmazemTampaCinza: TLabel;
-    lblArmazemBaseAzul: TLabel;
-    lblArmazemBaseVerde: TLabel;
-    lblArmazemBaseCinza: TLabel;
     labelRelogio: TLabel;
     Label2: TLabel;
     Label3: TLabel;
@@ -190,6 +195,7 @@ type
     Shape4: TShape;
     Shape5: TShape;
     Shape6: TShape;
+    shpStatusBraco: TShape;
     shpStatusPLC: TShape;
     spnMatAzul: TSpinEdit;
     spnMatVerde: TSpinEdit;
@@ -203,8 +209,11 @@ type
     spnTampaAzul: TSpinEdit;
     spnTampaVerde: TSpinEdit;
     spnTampaCinza: TSpinEdit;
+    StaticText1: TStaticText;
     StringGrid1: TStringGrid;
+    sgArmazem: TStringGrid;
     TabSheet1: TTabSheet;
+    TabSheet10: TTabSheet;
     TabSheet2: TTabSheet;
     TabSheet3: TTabSheet;
     TabSheet4: TTabSheet;
@@ -268,6 +277,8 @@ type
     procedure btnLimparClick(Sender: TObject);
     procedure btnPLCClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure sgArmazemDrawCell(Sender: TObject; aCol, aRow: Integer;
+      aRect: TRect; aState: TGridDrawState);
     procedure Timer1Timer(Sender: TObject);
     procedure btnAdicionarDefeitoClick(Sender: TObject);
     procedure btnDefeitosLimparClick(Sender: TObject);
@@ -305,6 +316,10 @@ type
     function IsReplenishment(const order: TProduction_Order; const allOrders: TArray_Production_Order): Boolean;
     function GetOrderPriority(const order: TProduction_Order): Integer;
     procedure SmartSortOrders(var orders: TArray_Production_Order);
+
+    //Scada Estantes Armazem
+    function TraduzirPeca(codigo: integer): string;
+    procedure Atualizar_Matriz_Armazem;
 
   end;
 
@@ -344,6 +359,11 @@ var
   Total_Recebidas : integer = 0;
   Total_Expedidas : integer = 0;
   Em_Processamento : integer = 0;
+
+  // Cronómetro Mestre do Plano - Braço Robótico
+  Plano_A_Executar : Boolean = False;
+  Tempo_Inicio_Plano : TDateTime;
+  Tempo_Total_Plano_Seg : Double = 0;
 
 
   // Contadores persistentes de produção por tipo de peça
@@ -771,6 +791,119 @@ begin
   LayoutScadaOverlays;
 end;
 
+procedure TFormDispatcher.sgArmazemDrawCell(Sender: TObject; aCol,
+  aRow: Integer; aRect: TRect; aState: TGridDrawState);
+var
+  Texto: string;
+  IDPeca: integer;
+  i_array: integer;
+  Estilo: TTextStyle;
+begin
+  // 1. Converter a coordenada visual (invertida) de volta para o índice do array (1..54)
+  // row 5 (fundo visual) -> nível 1 do armazém (i=1..9)
+  // Matemática invertida: (8 - aCol) faz o espelho horizontal da direita para a esquerda!
+  i_array := ((5 - aRow) * 9) + (8 - aCol) + 1;
+
+  // 2. NOVA PROTEÇÃO DE MEMÓRIA (O "Escudo" contra o Access Violation)
+  if Length(WAREHOUSE_Parts) = 0 then
+  begin
+    // Se o array ainda não tem tamanho, o programa acabou de abrir.
+    IDPeca := 0;
+  end
+  else if (i_array >= 1) and (i_array <= 54) then
+  begin
+     // O array já foi criado e o índice é válido!
+     IDPeca := WAREHOUSE_Parts[i_array];
+  end
+  else
+  begin
+     // Prevenção extra de segurança
+     IDPeca := 0;
+  end;
+
+  // Traduzir o número para o texto que vai aparecer no ecrã
+  Texto := TraduzirPeca(IDPeca);
+
+  // 3. O SISTEMA DE CORES (OwnerDraw)
+  case IDPeca of
+    0: // Vazio - Fundo Branco, Texto Cinza Suave
+    begin
+      sgArmazem.Canvas.Brush.Color := clWhite;
+      sgArmazem.Canvas.Font.Color := clSilver;
+      sgArmazem.Canvas.Font.Style := [];
+    end;
+
+    Part_Raw_Grey: // Matéria Cinza - Fundo Cinza Claro, Texto Preto
+    begin
+      sgArmazem.Canvas.Brush.Color := clLtGray;
+      sgArmazem.Canvas.Font.Color := clBlack;
+      sgArmazem.Canvas.Font.Style := [];
+    end;
+
+    Part_Lid_Green, Part_Base_Green: // Peças Verdes Prontas - Fundo Verde Suave, Texto Verde
+    begin
+      sgArmazem.Canvas.Brush.Color := $DDFFDD; // Verde muito claro (código hexadecimal)
+      sgArmazem.Canvas.Font.Color := clGreen;
+      sgArmazem.Canvas.Font.Style := [fsBold]; // Letras a negrito
+    end;
+
+    Part_Raw_Green: // Matéria Verde - Fundo Verde Suave, Texto Preto
+    begin
+      sgArmazem.Canvas.Brush.Color := $EEFFEE;
+      sgArmazem.Canvas.Font.Color := clBlack;
+      sgArmazem.Canvas.Font.Style := [];
+    end;
+
+    // Peças Azuis (MP ou Prontas)
+    Part_Raw_Blue, Part_Base_Blue, Part_Lid_Blue:
+    begin
+      sgArmazem.Canvas.Brush.Color := $FFEEEE; // Azul muito claro
+      sgArmazem.Canvas.Font.Color := clBlue;
+      sgArmazem.Canvas.Font.Style := [];
+    end;
+
+    // Estados de Movimentação (reservas)
+    -1: // A Entrar (Inbound) - Fundo Amarelo, Texto Preto
+    begin
+      sgArmazem.Canvas.Brush.Color := clYellow;
+      sgArmazem.Canvas.Font.Color := clBlack;
+      sgArmazem.Canvas.Font.Style := [];
+    end;
+    -2: // A Sair (Expedição/Produção) - Fundo Laranja (Atenção), Texto Preto
+    begin
+      sgArmazem.Canvas.Brush.Color := TColor($008CFF); // Cor Laranja Industrial (Darkorange)
+      sgArmazem.Canvas.Font.Color := clBlack;
+      sgArmazem.Canvas.Font.Style := [];
+    end;
+    else
+    begin
+      // Peças não definidas ainda, ou erros - Default
+      sgArmazem.Canvas.Brush.Color := clWhite;
+      sgArmazem.Canvas.Font.Color := clBlack;
+      sgArmazem.Canvas.Font.Style := [];
+    end;
+  end;
+
+  // 4. Desenhar Efetivamente (OwnerDraw)
+
+  // Desenhar o background da célula (FillRect)
+  sgArmazem.Canvas.FillRect(aRect);
+
+  // O TRUQUE DO LAZARUS: Copiar, alterar e devolver!
+  Estilo := sgArmazem.Canvas.TextStyle; // Tira uma cópia do estilo atual
+  Estilo.Alignment := taCenter;         // Centra na horizontal
+  Estilo.Layout := tlCenter;            // Centra na vertical
+  sgArmazem.Canvas.TextStyle := Estilo; // Devolve o estilo corrigido ao Canvas
+
+  // Desenhar o texto centralizado no quadrado
+  sgArmazem.Canvas.TextRect(aRect, aRect.Left, aRect.Top, Texto);
+
+  // Desenhar uma borda fina cinza para simular a prateleira
+  sgArmazem.Canvas.Pen.Color := clSilver;
+  sgArmazem.Canvas.Frame(aRect);
+end;
+
+
 
 procedure TFormDispatcher.Timer1Timer(Sender: TObject);
 var
@@ -792,6 +925,9 @@ begin
   Atualizar_SCADA_Analise;
 
   Atualizar_SCADA_Armazem; //Atualiza a cada segundo o armazem
+
+  Atualizar_Matriz_Armazem; // A TUA NOVA MATRIZ VISUAL EM TEMPO REAL!
+
   UpdateMachineTimers(ShopResources);// Atualiza os cronómetros
   Atualizar_Custos; //O Custo sobe em tempo real!
 
@@ -814,6 +950,9 @@ begin
     if TodasConcluidas then
     begin
       Timer1.Enabled := False; // Pára o relógio da fábrica
+
+      // Pára o cronómetro dos kpis
+      Plano_A_Executar := False;
 
       LogMsg('SISTEMA: Plano Semanal concluído! A aguardar Validação de Qualidade.');
       ShowMessage('Fim do Plano Semanal!' + sLineBreak + 'Por favor, valide a qualidade das peças produzidas no separador Monitorização.');
@@ -1515,6 +1654,8 @@ procedure TFormDispatcher.UpdateMachineTimers(shopfloor: TResources);
 var
   Now_T      : TDateTime;
   ElapsedSec : Double;
+  espacos_ocupados: integer; // <--- ADICIONAR AQUI
+  j: integer;                // <--- ADICIONAR AQUI
 
   function SecsElapsed(T1, T2: TDateTime): Double;
   begin
@@ -1659,6 +1800,48 @@ begin
      lblTempoEsperaAR.Caption := FormatFloat('0.0', AR_Wait_Total / AR_Wait_Count) + ' s'
   else
      lblTempoEsperaAR.Caption := '0.0 s';
+
+  // ==========================================================================
+  // SCADA - DASHBOARD DO ARMAZÉM (KPIs)
+  // ==========================================================================
+
+  // 1. A Luz do Braço Mecânico (Verde = Livre, Vermelho = A trabalhar)
+  if shopfloor.AR_free then
+    FormDispatcher.shpStatusBraco.Brush.Color := clLime
+  else
+    FormDispatcher.shpStatusBraco.Brush.Color := clRed;
+
+  // 2. O Cronómetro Mestre do Plano
+  if Plano_A_Executar then
+  begin
+    // Calcula os segundos que passaram desde o clique no "Executar"
+    Tempo_Total_Plano_Seg := Abs(Now_T - Tempo_Inicio_Plano) * 86400.0;
+  end;
+
+  // 3. Imprimir os Tempos
+  FormDispatcher.lblScadaTempoPlano.Caption := 'Tempo Total do Plano: ' + FormatFloat('0.0', Tempo_Total_Plano_Seg) + ' s';
+  FormDispatcher.lblScadaTempoBraco.Caption := 'Tempo de Trabalho do Braço: ' + FormatFloat('0.0', AR_Op_Total) + ' s';
+
+  // 4. Taxa de Utilização do Braço (Matemática Industrial!)
+  if Tempo_Total_Plano_Seg > 0 then
+    FormDispatcher.lblScadaUtilizacao.Caption := 'Taxa de Utilização: ' + FormatFloat('0.0', (AR_Op_Total / Tempo_Total_Plano_Seg) * 100) + ' %'
+  else
+    FormDispatcher.lblScadaUtilizacao.Caption := 'Taxa de Utilização: 0.0 %';
+
+  // 5. A Métrica Bónus: Ocupação do Armazém (%)
+  if Length(WAREHOUSE_Parts) > 0 then
+  begin
+    espacos_ocupados := 0; // Apenas inicia a variável a zero
+
+    for j := 1 to 54 do
+    begin
+      if WAREHOUSE_Parts[j] > 0 then
+        Inc(espacos_ocupados);
+    end;
+
+    FormDispatcher.lblScadaLotacao.Caption := 'Ocupação do Armazém: ' + FormatFloat('0.0', (espacos_ocupados / 54.0) * 100) + ' %';
+  end;
+
 end;
 
 //PROCEDURE CUSTOS
@@ -2117,6 +2300,35 @@ begin
 end;
 
 
+// Traduz o ID numérico da peça para um texto compreensível
+function TFormDispatcher.TraduzirPeca(codigo: integer): string;
+begin
+  case codigo of
+    0: Result := '[ Vazio ]';
+   -1: Result := '>> A ENTRAR'; // Reserva de Inbound
+   -2: Result := '<< A SAIR';   // Reserva de Expedição / Produção
+    Part_Raw_Blue:   Result := 'Matéria Azul';
+    Part_Raw_Green:  Result := 'Matéria Verde';
+    Part_Raw_Grey:   Result := 'Matéria Cinza';
+    Part_Base_Blue:  Result := 'Base Azul';
+    Part_Base_Green: Result := 'Base Verde';
+    Part_Base_Grey:  Result := 'Base Cinza';
+    Part_Lid_Blue:   Result := 'Tampa Azul';
+    Part_Lid_Green:  Result := 'Tampa Verde';
+    Part_Lid_Grey:   Result := 'Tampa Cinza';
+    else Result := '???';
+  end;
+end;
+
+// Layout REAL do Armazém: 9 Colunas x 6 Linhas = 54 posições
+procedure TFormDispatcher.Atualizar_Matriz_Armazem;
+begin
+  // O "Repaint" obriga o Lazarus a redesenhar a grelha NAQUELE EXATO MILISSEGUNDO,
+  // chamando o nosso evento de cores (OnDrawCell).
+  sgArmazem.Repaint;
+end;
+
+
 //---------------- BOTÕES ADICIONAR ---------------------
 
 
@@ -2303,6 +2515,11 @@ begin
 
   // Ligar o "motor" (se não estivesse já ligado)
   Timer1.Enabled := true;
+
+  // Iniciar o cronómetro mestre - KPIs
+  Plano_A_Executar := True;
+  Tempo_Inicio_Plano := Now;
+  Tempo_Total_Plano_Seg := 0;
 
   LogMsg('SISTEMA: Execução do plano iniciada!');
 end;
